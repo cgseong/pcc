@@ -202,9 +202,9 @@ class CodingTestMonitor:
             return go.Figure()
 
 def main():
-    st.set_page_config(page_title="코딩 역량 테스트 모니터링 시스템", layout="wide")
+    st.set_page_config(page_title="PCC 모니터링", layout="wide")
     
-    st.title("코딩 역량 테스트 모니터링 시스템")
+    st.title("PCC 모니터링")
     
     # 모니터링 객체 생성
     monitor = CodingTestMonitor()
