@@ -21,7 +21,7 @@ class CodingTestMonitor:
                 df = pd.read_excel(file)
             
             # 현재 컬럼명 출력 (디버깅용)
-            st.write("현재 파일의 컬럼:", list(df.columns))
+            
             
             # 데이터 타입 변환
             # No. 컬럼을 정수형으로 변환
@@ -49,8 +49,7 @@ class CodingTestMonitor:
                 'No.': 1
             })
             
-            # 데이터 타입 확인 출력
-            st.write("데이터 타입:", df.dtypes)
+            # 데이터 타입 확인 출력            
             
             self.data = df
             return True
