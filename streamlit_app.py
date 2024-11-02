@@ -112,99 +112,62 @@ class CodingTestMonitor:
             st.error(f"점수 분포 시각화 중 오류 발생: {e}")
             return go.Figure()
     
-    def create_department_performance_plot(self, data):
-        """학과별 성과를 시각화합니다."""
+    def create_department_average_score_plot(self, data):
+        """학과별 평균 점수를 시각화합니다."""
         try:
-            dept_scores = data.groupby('학과').agg({
-                '총점': 'mean',
-                '총점': 'count',
-                '합격여부': lambda x: (x == '합격').mean() * 100
-            }).reset_index()
+            dept_scores = data.groupby('학과').agg({'총점': 'mean'}).reset_index()
             
             fig = px.bar(dept_scores, x='학과', y='총점',
-                        title='학과별 평균 점수 및 합격률',
-                        labels={'총점': '평균 점수', '학과': '학과'},
-                        text='총점')
-            
-            fig.add_scatter(x=dept_scores['학과'], y=dept_scores['합격여부'],
-                          name='합격률(%)', yaxis='y2', mode='lines+markers')
-            
-            fig.update_layout(
-                yaxis2=dict(
-                    title='합격률(%)',
-                    overlaying='y',
-                    side='right'
-                ),
-                showlegend=True
-            )
-            
-            fig.update_traces(
-                texttemplate='응시자 수: %{text}명',
-                textposition='outside',  # 수정된 부분
-                selector=dict(type='bar')
-            )
+                        title='학과별 평균 점수',
+                        labels={'총점': '평균 점수', '학과': '학과'})
             return fig
         except Exception as e:
-            st.error(f"학과별 성과 시각화 중 오류 발생: {e}")
+            st.error(f"학과별 평균 점수 시각화 중 오류 발생: {e}")
             return go.Figure()
 
-    def create_grade_distribution_plot(self, data):
-        """등급 분포를 시각화합니다."""
+    def create_department_pass_rate_plot(self, data):
+        """학과별 합격률을 시각화합니다."""
         try:
-            grade_dist = data['등급(Lv.)'].value_counts()
-            fig = px.pie(values=grade_dist.values, names=grade_dist.index,
-                        title='등급별 분포')
+            dept_pass_rate = data.groupby('학과').agg({'합격여부': lambda x: (x == '합격').mean() * 100}).reset_index()
+            
+            fig = px.bar(dept_pass_rate, x='학과', y='합격여부',
+                        title='학과별 합격률',
+                        labels={'합격여부': '합격률(%)', '학과': '학과'})
             return fig
         except Exception as e:
-            st.error(f"등급 분포 시각화 중 오류 발생: {e}")
+            st.error(f"학과별 합격률 시각화 중 오류 발생: {e}")
             return go.Figure()
-    
-    def create_performance_by_subject_plot(self, data):
-        """과목별 성과를 시각화합니다."""
+
+    def create_subject_average_score_plot(self, data):
+        """과목별 평균 점수를 시각화합니다."""
         try:
-            subject_scores = data.groupby('시험과목').agg({
-                '총점': ['mean', 'count'],
-                '합격여부': lambda x: (x == '합격').mean() * 100
-            }).round(1)
+            subject_scores = data.groupby('시험과목').agg({'총점': 'mean'}).reset_index()
             
-            subject_scores.columns = ['평균점수', '응시자수', '합격률']
-            subject_scores = subject_scores.reset_index()
-            
-            fig = go.Figure()
-            
-            fig.add_trace(go.Bar(
-                x=subject_scores['시험과목'],
-                y=subject_scores['평균점수'],
-                name='평균점수',
-                text=subject_scores['응시자수'],
-                textposition='outside',  # 수정된 부분
-                texttemplate='응시자 수: %{text}명'
-            ))
-            
-            fig.add_trace(go.Scatter(
-                x=subject_scores['시험과목'],
-                y=subject_scores['합격률'],
-                name='합격률(%)',
-                yaxis='y2',
-                mode='lines+markers'
-            ))
-            
-            fig.update_layout(
-                title='과목별 평균 점수 및 합격률',
-                yaxis=dict(title='평균 점수'),
-                yaxis2=dict(title='합격률(%)', overlaying='y', side='right'),
-                showlegend=True
-            )
-            
+            fig = px.bar(subject_scores, x='시험과목', y='총점',
+                        title='과목별 평균 점수',
+                        labels={'총점': '평균 점수', '시험과목': '과목'})
             return fig
         except Exception as e:
-            st.error(f"과목별 성과 시각화 중 오류 발생: {e}")
+            st.error(f"과목별 평균 점수 시각화 중 오류 발생: {e}")
+            return go.Figure()
+
+    def create_subject_pass_rate_plot(self, data):
+        """과목별 합격률을 시각화합니다."""
+        try:
+            subject_pass_rate = data.groupby('시험과목').agg({'합격여부': lambda x: (x == '합격').mean() * 100}).reset_index()
+            
+            fig = px.bar(subject_pass_rate, x='시험과목', y='합격여부',
+                        title='과목별 합격률',
+                        labels={'합격여부': '합격률(%)', '시험과목': '과목'})
+            return fig
+        except Exception as e:
+            st.error(f"과목별 합격률 시각화 중 오류 발생: {e}")
             return go.Figure()
 
 def main():
-    st.set_page_config(page_title="PCC 모니터링", layout="wide")
+    st.set_page_config(page_title="코딩 역량 테스트 모니터링 시스템", layout="wide")
     
-    st.title("PCC 모니터링")
+    st.title("코딩 역량 테스트 모니터링 시스템")
     
     # 모니터링 객체 생성
     monitor = CodingTestMonitor()
@@ -289,13 +252,17 @@ def main():
             with col1:
                 st.plotly_chart(monitor.create_score_distribution_plot(filtered_data),
                                use_container_width=True)
-                st.plotly_chart(monitor.create_department_performance_plot(filtered_data),
+                st.plotly_chart(monitor.create_department_average_score_plot(filtered_data),
+                               use_container_width=True)
+                st.plotly_chart(monitor.create_department_pass_rate_plot(filtered_data),
                                use_container_width=True)
             
             with col2:
-                st.plotly_chart(monitor.create_grade_distribution_plot(filtered_data),
+                st.plotly_chart(monitor.create_subject_average_score_plot(filtered_data),
                                use_container_width=True)
-                st.plotly_chart(monitor.create_performance_by_subject_plot(filtered_data),
+                st.plotly_chart(monitor.create_subject_pass_rate_plot(filtered_data),
+                               use_container_width=True)
+                st.plotly_chart(monitor.create_grade_distribution_plot(filtered_data),
                                use_container_width=True)
             
             # 데이터 테이블 표시
