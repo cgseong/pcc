@@ -123,14 +123,14 @@ class CodingTestMonitor:
         try:
             dept_scores = data.groupby('학과').agg({
                 '총점': 'mean',
-                'No.': 'count',
+                '총점': 'count',
                 '합격여부': lambda x: (x == '합격').mean() * 100
             }).reset_index()
             
             fig = px.bar(dept_scores, x='학과', y='총점',
                         title='학과별 평균 점수 및 합격률',
                         labels={'총점': '평균 점수', '학과': '학과'},
-                        text='No.')
+                        text='총점')
             
             fig.add_scatter(x=dept_scores['학과'], y=dept_scores['합격여부'],
                           name='합격률(%)', yaxis='y2', mode='lines+markers')
@@ -146,7 +146,7 @@ class CodingTestMonitor:
             
             fig.update_traces(
                 texttemplate='응시자 수: %{text}명',
-                textposition='top center',
+                textposition='outside',  # 수정된 부분
                 selector=dict(type='bar')
             )
             return fig
@@ -183,7 +183,7 @@ class CodingTestMonitor:
                 y=subject_scores['평균점수'],
                 name='평균점수',
                 text=subject_scores['응시자수'],
-                textposition='top center',
+                textposition='outside',  # 수정된 부분
                 texttemplate='응시자 수: %{text}명'
             ))
             
