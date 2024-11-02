@@ -163,6 +163,17 @@ class CodingTestMonitor:
         except Exception as e:
             st.error(f"과목별 합격률 시각화 중 오류 발생: {e}")
             return go.Figure()
+    
+    def create_grade_distribution_plot(self, data):
+        """등급 분포를 시각화합니다."""
+        try:
+            grade_dist = data['등급(Lv.)'].value_counts()
+            fig = px.pie(values=grade_dist.values, names=grade_dist.index,
+                        title='등급별 분포')
+            return fig
+        except Exception as e:
+            st.error(f"등급 분포 시각화 중 오류 발생: {e}")
+            return go.Figure()
 
 def main():
     st.set_page_config(page_title="코딩 역량 테스트 모니터링 시스템", layout="wide")
