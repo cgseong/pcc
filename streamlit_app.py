@@ -184,7 +184,7 @@ class CodingTestMonitor:
 def main():
     st.set_page_config(page_title="닥코(닥치고 코딩)", layout="wide")
     
-    st.title("코딩 역량 테스트 모니터링")
+    st.title("코딩 역량 테스트")
     
     # 모니터링 객체 생성
     monitor = CodingTestMonitor()
