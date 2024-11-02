@@ -20,9 +20,6 @@ class CodingTestMonitor:
             elif file.name.endswith(('.xlsx', '.xls')):
                 df = pd.read_excel(file)
             
-            # 현재 컬럼명 출력 (디버깅용)
-            
-            
             # 데이터 타입 변환
             # No. 컬럼을 정수형으로 변환
             if 'No.' in df.columns:
@@ -48,8 +45,6 @@ class CodingTestMonitor:
                 '학년': '1',
                 'No.': 1
             })
-            
-            # 데이터 타입 확인 출력            
             
             self.data = df
             return True
@@ -216,106 +211,116 @@ def main():
     
     # 파일 업로드
     st.sidebar.header("데이터 업로드")
-    uploaded_file = st.sidebar.file_uploader("테스트 결과 파일 업로드",
-                                           type=['csv', 'xlsx', 'xls'])
+    uploaded_file = st.sidebar.selectbox(
+        "테스트 결과 파일 선택",
+        [
+            '부산대학교 PCC_1회 응시 결과.csv',
+            '부산대학교 PCC_2회 응시 결과.csv',
+            '부산대학교 PCC_3회 응시 결과.csv',
+            '부산대학교 PCC_4회 응시 결과.csv'
+        ]
+    )
+
+    if uploaded_file:
+        try:
+            file = open(uploaded_file, 'r')
+            if monitor.load_data(file):
+                st.sidebar.success("데이터 로드 완료!")
+        except Exception as e:
+            st.error(f"파일 로드 중 오류 발생: {e}")
     
-    if uploaded_file is not None and monitor.load_data(uploaded_file):
-        st.sidebar.success("데이터 로드 완료!")
-        
-        if not monitor.data.empty:
-            try:
-                # 필터링 옵션
-                st.sidebar.header("데이터 필터링")
-                
-                # 학과 필터
-                departments = [''] + sorted(monitor.data['학과'].unique().tolist())
-                selected_dept = st.sidebar.selectbox("학과 선택", departments)
-                
-                # 학년 필터
-                years = [''] + sorted(monitor.data['학년'].unique().tolist())
-                selected_year = st.sidebar.selectbox("학년 선택", years)
-                
-                # 합격여부 필터
-                pass_status = [''] + sorted(monitor.data['합격여부'].unique().tolist())
-                selected_status = st.sidebar.selectbox("합격여부 선택", pass_status)
-                
-                # 등급 필터
-                levels = [''] + sorted(monitor.data['등급(Lv.)'].unique().tolist())
-                selected_level = st.sidebar.selectbox("등급 선택", levels)
-                
-                # 시험과목 필터
-                subjects = [''] + sorted(monitor.data['시험과목'].unique().tolist())
-                selected_subject = st.sidebar.selectbox("시험과목 선택", subjects)
-                
-                # 필터 적용
-                filters = {
-                    '학과': selected_dept,
-                    '학년': selected_year,
-                    '합격여부': selected_status,
-                    '등급(Lv.)': selected_level,
-                    '시험과목': selected_subject
-                }
-                
-                # 빈 값 제거
-                filters = {k: v for k, v in filters.items() if v}
-                
-                filtered_data = monitor.filter_data(filters)
-                
-                # 기본 통계 표시
-                st.header("기본 통계")
-                stats = monitor.get_statistics(filtered_data)
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("총 응시자 수", f"{stats['총 응시자 수']}명")
-                with col2:
-                    st.metric("합격률", f"{stats['합격률']:.1f}%")
-                with col3:
-                    st.metric("평균 점수", f"{stats['평균 점수']:.1f}점")
-                
-                # 시각화
-                st.header("데이터 시각화")
-                
-                # 2x2 그리드로 차트 배치
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.plotly_chart(monitor.create_score_distribution_plot(filtered_data),
-                                   use_container_width=True)
-                    st.plotly_chart(monitor.create_department_performance_plot(filtered_data),
-                                   use_container_width=True)
-                
-                with col2:
-                    st.plotly_chart(monitor.create_grade_distribution_plot(filtered_data),
-                                   use_container_width=True)
-                    st.plotly_chart(monitor.create_performance_by_subject_plot(filtered_data),
-                                   use_container_width=True)
-                
-                # 데이터 테이블 표시
-                st.header("상세 데이터")
-                st.dataframe(filtered_data)
-                
-                # 데이터 다운로드 버튼
-                if st.button("필터링된 데이터 다운로드"):
-                    output = pd.ExcelWriter('filtered_test_results.xlsx', engine='openpyxl')
-                    filtered_data.to_excel(output, index=False)
-                    output.close()
-                    
-                    with open('filtered_test_results.xlsx', 'rb') as f:
-                        st.download_button(
-                            label="Excel 파일 다운로드",
-                            data=f,
-                            file_name="filtered_test_results.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        )
+    if not monitor.data.empty:
+        try:
+            # 필터링 옵션
+            st.sidebar.header("데이터 필터링")
             
-            except Exception as e:
-                st.error(f"데이터 처리 중 오류 발생: {e}")
-                st.info("데이터 형식을 확인해주세요.")
-        else:
-            st.warning("업로드된 파일에 데이터가 없습니다.")
+            # 학과 필터
+            departments = [''] + sorted(monitor.data['학과'].unique().tolist())
+            selected_dept = st.sidebar.selectbox("학과 선택", departments)
+            
+            # 학년 필터
+            years = [''] + sorted(monitor.data['학년'].unique().tolist())
+            selected_year = st.sidebar.selectbox("학년 선택", years)
+            
+            # 합격여부 필터
+            pass_status = [''] + sorted(monitor.data['합격여부'].unique().tolist())
+            selected_status = st.sidebar.selectbox("합격여부 선택", pass_status)
+            
+            # 등급 필터
+            levels = [''] + sorted(monitor.data['등급(Lv.)'].unique().tolist())
+            selected_level = st.sidebar.selectbox("등급 선택", levels)
+            
+            # 시험과목 필터
+            subjects = [''] + sorted(monitor.data['시험과목'].unique().tolist())
+            selected_subject = st.sidebar.selectbox("시험과목 선택", subjects)
+            
+            # 필터 적용
+            filters = {
+                '학과': selected_dept,
+                '학년': selected_year,
+                '합격여부': selected_status,
+                '등급(Lv.)': selected_level,
+                '시험과목': selected_subject
+            }
+            
+            # 빈 값 제거
+            filters = {k: v for k, v in filters.items() if v}
+            
+            filtered_data = monitor.filter_data(filters)
+            
+            # 기본 통계 표시
+            st.header("기본 통계")
+            stats = monitor.get_statistics(filtered_data)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("총 응시자 수", f"{stats['총 응시자 수']}명")
+            with col2:
+                st.metric("합격률", f"{stats['합격률']:.1f}%")
+            with col3:
+                st.metric("평균 점수", f"{stats['평균 점수']:.1f}점")
+            
+            # 시각화
+            st.header("데이터 시각화")
+            
+            # 2x2 그리드로 차트 배치
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.plotly_chart(monitor.create_score_distribution_plot(filtered_data),
+                               use_container_width=True)
+                st.plotly_chart(monitor.create_department_performance_plot(filtered_data),
+                               use_container_width=True)
+            
+            with col2:
+                st.plotly_chart(monitor.create_grade_distribution_plot(filtered_data),
+                               use_container_width=True)
+                st.plotly_chart(monitor.create_performance_by_subject_plot(filtered_data),
+                               use_container_width=True)
+            
+            # 데이터 테이블 표시
+            st.header("상세 데이터")
+            st.dataframe(filtered_data)
+            
+            # 데이터 다운로드 버튼
+            if st.button("필터링된 데이터 다운로드"):
+                output = pd.ExcelWriter('filtered_test_results.xlsx', engine='openpyxl')
+                filtered_data.to_excel(output, index=False)
+                output.close()
+                
+                with open('filtered_test_results.xlsx', 'rb') as f:
+                    st.download_button(
+                        label="Excel 파일 다운로드",
+                        data=f,
+                        file_name="filtered_test_results.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+        
+        except Exception as e:
+            st.error(f"데이터 처리 중 오류 발생: {e}")
+            st.info("데이터 형식을 확인해주세요.")
     else:
-        st.info("시작하려면 왼쪽 사이드바에서 데이터 파일을 업로드해주세요.")
+        st.warning("업로드된 파일에 데이터가 없습니다.")
 
 if __name__ == "__main__":
     main()
