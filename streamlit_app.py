@@ -62,7 +62,7 @@ class CodingTestMonitor:
                 if value:  # 값이 존재하는 경우에만 필터링
                     if isinstance(value, list):
                         if value:  # 리스트가 비어있지 않은 경우에만
-                            filtered_data = filtered_data[filtered_data[key].isin(value)]
+                            filtered_data = filtered_data[filtered_data[key].isin(value)]                            
                     else:
                         # 학년 필터링 시 데이터 타입 처리
                         if key == '학년':
