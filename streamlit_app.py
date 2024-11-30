@@ -214,9 +214,9 @@ def main():
             # 필터링 옵션
             st.sidebar.header("데이터 필터링")
             
-            # 학과 필터
-            departments = [''] + sorted(monitor.data['학과'].unique().tolist())
-            selected_dept = st.sidebar.selectbox("학과 선택", departments)
+            # 학과 필터 (다중 선택 가능하도록 수정)
+            departments = sorted(monitor.data['학과'].unique().tolist())
+            selected_dept = st.sidebar.multiselect("학과 선택 (다중 선택 가능)", departments)
             
             # 학년 필터
             years = [''] + sorted(monitor.data['학년'].unique().tolist())
