@@ -7,7 +7,7 @@ import numpy as np
 
 class CodingTestMonitor:
     def __init__(self):
-        self.columns = ['No.', '시험과목', '이름', '이메일', '합격여부', '총점', '등급(Lv.)', 
+        self.columns = ['No.', '시험과목',  '이메일', '합격여부', '총점', '등급(Lv.)', 
                        '학과', '학년', '학번']
         self.data = pd.DataFrame(columns=self.columns)
     
@@ -34,7 +34,7 @@ class CodingTestMonitor:
                 df['학년'] = df['학년'].astype(str)
             
             # 문자열 컬럼들의 타입 변환
-            string_columns = ['시험과목', '이름', '이메일', '합격여부', '등급(Lv.)', '학과', '학번']
+            string_columns = ['시험과목',  '이메일', '합격여부', '등급(Lv.)', '학과', '학번']
             for col in string_columns:
                 if col in df.columns:
                     df[col] = df[col].astype(str)
