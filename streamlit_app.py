@@ -197,7 +197,7 @@ class CodingTestMonitor:
             }).reset_index()
             
             # 컬럼명 변경
-            avg_scores.columns = ['학년', '합격여부', '평균점수', '학생수']**
+            avg_scores.columns = ['학년', '합격여부', '평균점수', '학생수']
             
             # 그래프 생성
             fig = go.Figure()
