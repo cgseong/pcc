@@ -221,10 +221,10 @@ class CodingTestMonitor:
                 name='불합격',
                 x=fail_data['학년'],
                 y=fail_data['평균점수'],
-                **text=[f'평균: {score:.1f}점<br>인원: {count}명' for score, count in zip(fail_data['평균점수'], fail_data['학생수'])],**
+                text=[f'평균: {score:.1f}점<br>인원: {count}명' for score, count in zip(fail_data['평균점수'], fail_data['학생수'])],
                 textposition='auto',
                 marker_color='red',
-                **hovertemplate='%{x}학년<br>평균: %{y:.1f}점<br>인원: %{customdata}명<extra></extra>',**
+                hovertemplate='%{x}학년<br>평균: %{y:.1f}점<br>인원: %{customdata}명<extra></extra>',
                 customdata=fail_data['학생수']
             ))
             
@@ -245,13 +245,13 @@ class CodingTestMonitor:
                 barmode='group',
                 bargap=0.15,
                 bargroupgap=0.1,
-                **showlegend=True,
+                showlegend=True,
                 legend=dict(
                     yanchor="top",
                     y=0.99,
                     xanchor="right",
                     x=0.99
-                )**
+                )
             )
             
             return fig
