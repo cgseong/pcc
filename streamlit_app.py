@@ -687,20 +687,11 @@ class CodingTestMonitor:
                 ),
                 yaxis=dict(
                     title=dict(
-                        text='합격/불합격 학생수',
+                        text='전체 응시자수',
                         font=dict(color='black')
                     ),
                     tickfont=dict(color='black')
-                ),
-                yaxis2=dict(
-                    title=dict(
-                        text='전체 응시자수',
-                        font=dict(color='blue')
-                    ),
-                    overlaying='y',
-                    side='right',
-                    tickfont=dict(color='blue')
-                ),
+                ),              
                 showlegend=True,
                 legend=dict(
                     yanchor="top",
