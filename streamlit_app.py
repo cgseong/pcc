@@ -182,6 +182,120 @@ class CodingTestMonitor:
             st.error(f"등급 분포 시각화 중 오류 발생: {e}")
             return go.Figure()
 
+    def create_performance_heatmap(self, data):
+        """정보컴퓨터공학부 학년별 평균 점수와 학생수를 시각화합니다."""
+        try:
+            # 정보컴퓨터공학부 데이터만 필터링
+            filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
+            
+            # 학년을 정수로 변환
+            filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
+            
+            # 학년별, 합격여부별 평균 점수와 학생수 계산
+            avg_scores = filtered_data.groupby(['학년', '합격여부']).agg({
+                '총점': ['mean', 'count']
+            }).reset_index()
+            
+            # 컬럼명 변경
+            avg_scores.columns = ['학년', '합격여부', '평균점수', '학생수']
+            
+            # 그래프 생성
+            fig = go.Figure()
+            
+            # 합격자 평균 점수 막대 추가
+            pass_data = avg_scores[avg_scores['합격여부'] == '합격']
+            fig.add_trace(go.Bar(
+                name='합격자 평균',
+                x=pass_data['학년'],
+                y=pass_data['평균점수'],
+                text=pass_data['평균점수'].round(1).astype(str) + '점',
+                textposition='auto',
+                marker_color='green',
+                yaxis='y'
+            ))
+            
+            # 불합격자 평균 점수 막대 추가
+            fail_data = avg_scores[avg_scores['합격여부'] == '불합격']
+            fig.add_trace(go.Bar(
+                name='불합격자 평균',
+                x=fail_data['학년'],
+                y=fail_data['평균점수'],
+                text=fail_data['평균점수'].round(1).astype(str) + '점',
+                textposition='auto',
+                marker_color='red',
+                yaxis='y'
+            ))
+            
+            # 합격자 학생수 선 그래프 추가
+            fig.add_trace(go.Scatter(
+                name='합격자 수',
+                x=pass_data['학년'],
+                y=pass_data['학생수'],
+                text=pass_data['학생수'].astype(str) + '명',
+                textposition='top center',
+                mode='lines+markers+text',
+                marker=dict(size=8, color='lightgreen'),
+                line=dict(color='lightgreen', width=2),
+                yaxis='y2'
+            ))
+            
+            # 불합격자 학생수 선 그래프 추가
+            fig.add_trace(go.Scatter(
+                name='불합격자 수',
+                x=fail_data['학년'],
+                y=fail_data['학생수'],
+                text=fail_data['학생수'].astype(str) + '명',
+                textposition='bottom center',
+                mode='lines+markers+text',
+                marker=dict(size=8, color='lightcoral'),
+                line=dict(color='lightcoral', width=2),
+                yaxis='y2'
+            ))
+            
+            # 레이아웃 설정
+            fig.update_layout(
+                title='정보컴퓨터공학부 학년별 평균 점수와 학생수',
+                xaxis=dict(
+                    title='학년',
+                    tickmode='array',
+                    ticktext=['1', '2', '3', '4'],
+                    tickvals=[1, 2, 3, 4],
+                    dtick=1
+                ),
+                yaxis=dict(
+                    title=dict(
+                        text='평균 점수',
+                        font=dict(color='black')
+                    ),
+                    range=[0, 100],
+                    tickfont=dict(color='black')
+                ),
+                yaxis2=dict(
+                    title=dict(
+                        text='학생수',
+                        font=dict(color='gray')
+                    ),
+                    overlaying='y',
+                    side='right',
+                    tickfont=dict(color='gray')
+                ),
+                showlegend=True,
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="right",
+                    x=0.99
+                ),
+                barmode='group',
+                bargap=0.15,
+                bargroupgap=0.1
+            )
+            
+            return fig
+        except Exception as e:
+            st.error(f"점수 분포 시각화 중 오류 발생: {e}")
+            return go.Figure()
+
 
     def create_total_participants_plot(self):
         """모든 회차의 정보컴퓨터공학부 응시자 현황을 시각화합니다."""        
