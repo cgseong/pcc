@@ -322,6 +322,41 @@ class CodingTestMonitor:
             st.error(f"학생 진행 데이터 추출 중 오류 발생: {e}")
             return pd.DataFrame()
 
+    def get_multiple_test_students(self):
+        """2회 이상 테스트를 수행한 학생들의 이메일 목록을 반환합니다."""
+        try:
+            # 각 학생별 응시 횟수 계산
+            student_counts = {}
+            for data in self.all_rounds_data.values():
+                for email in data['이메일'].unique():
+                    student_counts[email] = student_counts.get(email, 0) + 1
+            
+            # 2회 이상 응시한 학생들만 필터링
+            multiple_test_students = [
+                email for email, count in student_counts.items() 
+                if count >= 2
+            ]
+            
+            # 학생 정보 가져오기 (이메일, 학과, 학번)
+            student_info = []
+            for email in multiple_test_students:
+                # 가장 최근 회차의 데이터에서 학생 정보 가져오기
+                for round_data in reversed(self.all_rounds_data.values()):
+                    student_data = round_data[round_data['이메일'] == email]
+                    if not student_data.empty:
+                        student_info.append({
+                            '이메일': email,
+                            '학과': student_data['학과'].iloc[0],
+                            '학번': student_data['학번'].iloc[0],
+                            '응시횟수': student_counts[email]
+                        })
+                        break
+            
+            return pd.DataFrame(student_info)
+        except Exception as e:
+            st.error(f"다중 응시자 목록 생성 중 오류 발생: {e}")
+            return pd.DataFrame()
+        
     def create_student_progress_plots(self, email):
         """학생의 회차별 성과를 시각화합니다."""
         try:
@@ -557,38 +592,54 @@ def main():
             
             # 전체 회차 데이터 로드
             if monitor.load_all_rounds_data():
-                # 전체 학생 목록 생성
-                all_emails = set()
-                for data in monitor.all_rounds_data.values():
-                    all_emails.update(data['이메일'].unique())
+                # 2회 이상 응시한 학생 목록 가져오기
+                multiple_test_students = monitor.get_multiple_test_students()
                 
-                # 학생 선택
-                selected_email = st.selectbox(
-                    "분석할 학생 선택",
-                    options=sorted(list(all_emails))
-                )
-                
-                if selected_email:
-                    score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
+                if not multiple_test_students.empty:
+                    # 학생 선택을 위한 데이터프레임 표시
+                    st.subheader("2회 이상 응시자 목록")
+                    st.dataframe(
+                        multiple_test_students,
+                        column_config={
+                            "이메일": "이메일",
+                            "학과": "학과",
+                            "학번": "학번",
+                            "응시횟수": st.column_config.NumberColumn(
+                                "응시횟수",
+                                help="전체 응시 횟수"
+                            )
+                        },
+                        hide_index=True
+                    )
                     
-                    if score_fig and grade_fig and summary_df is not None:
-                        # 성과 요약 표시
-                        st.subheader("성과 요약")
-                        st.dataframe(summary_df, hide_index=True)
+                    # 학생 선택
+                    selected_email = st.selectbox(
+                        "분석할 학생 선택",
+                        options=multiple_test_students['이메일'].tolist(),
+                        format_func=lambda x: f"{x} ({multiple_test_students[multiple_test_students['이메일']==x]['학과'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['학번'].iloc[0]})"
+                    )
+                    
+                    if selected_email:
+                        score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
                         
-                        # 그래프 표시
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.plotly_chart(score_fig, use_container_width=True)
-                        with col2:
-                            st.plotly_chart(grade_fig, use_container_width=True)
-                        
-                        # 상세 데이터 표시
-                        st.subheader("상세 회차별 데이터")
-                        progress_data = monitor.get_student_progress(selected_email)
-                        st.dataframe(progress_data)
-                    else:
-                        st.warning("선택한 학생의 데이터가 충분하지 않습니다.")
+                        if score_fig and grade_fig and summary_df is not None:
+                            # 성과 요약 표시
+                            st.subheader("성과 요약")
+                            st.dataframe(summary_df, hide_index=True)
+                            
+                            # 그래프 표시
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.plotly_chart(score_fig, use_container_width=True)
+                            with col2:
+                                st.plotly_chart(grade_fig, use_container_width=True)
+                            
+                            # 상세 데이터 표시
+                            st.subheader("상세 회차별 데이터")
+                            progress_data = monitor.get_student_progress(selected_email)
+                            st.dataframe(progress_data)
+                else:
+                    st.warning("2회 이상 응시한 학생이 없습니다.")
                     
         except Exception as e:
             st.error(f"데이터 처리 중 오류 발생: {e}")
