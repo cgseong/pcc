@@ -691,7 +691,16 @@ class CodingTestMonitor:
                         font=dict(color='black')
                     ),
                     tickfont=dict(color='black')
-                ),              
+                ),
+                yaxis2=dict(
+                    title=dict(
+                        text='',
+                        font=dict(color='blue')
+                    ),
+                    overlaying='y',
+                    side='right',
+                    tickfont=dict(color='blue')
+                ),            
                 showlegend=True,
                 legend=dict(
                     yanchor="top",
