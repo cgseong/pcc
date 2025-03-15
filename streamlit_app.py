@@ -774,7 +774,7 @@ def main():
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
             # 고급 분석 섹션
-            st.header("추가 분석")
+            st.header("전체 회차")
             
             # 탭 생성
             tab1, tab2 = st.tabs(["성과 분포", "상세 통계"])
