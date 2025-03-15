@@ -192,10 +192,12 @@ class CodingTestMonitor:
             filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
             
             # 학년별, 합격여부별 평균 점수 계산
-            avg_scores = filtered_data.groupby(['학년', '합격여부'])['총점'].agg([
-                '평균점수',
-                '학생수'
-            ]).reset_index()
+            avg_scores = filtered_data.groupby(['학년', '합격여부']).agg({
+                '총점': ['mean', 'count']
+            }).reset_index()
+            
+            # 컬럼명 변경
+            avg_scores.columns = ['학년', '합격여부', '평균점수', '학생수']**
             
             # 그래프 생성
             fig = go.Figure()
@@ -243,11 +245,12 @@ class CodingTestMonitor:
                 barmode='group',
                 bargap=0.15,
                 bargroupgap=0.1
-            )            
+            )
+            
             return fig
         except Exception as e:
             st.error(f"점수 분포 시각화 중 오류 발생: {e}")
-            return go.Figure()         
+            return go.Figure()
         
     def create_performance_radar(self, data, department=None):
         """학과별 종합 성과 레이더 차트를 생성합니다."""
