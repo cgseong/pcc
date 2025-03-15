@@ -381,7 +381,7 @@ class CodingTestMonitor:
             ))
             score_fig.update_layout(
                 title='회차별 점수 추이',
-                **xaxis=dict(
+                xaxis=dict(
                 title='회차',
                 tickmode='array',
                 ticktext=progress_df['회차'].astype(int),
