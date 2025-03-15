@@ -187,41 +187,28 @@ class CodingTestMonitor:
         try:
             # 모든 회차 데이터 통합
             all_data = pd.DataFrame()
-            for round_num, round_data in self.all_rounds_data.items():
-                # 데이터 구조 확인
-                st.write(f"{round_num}회차 데이터 컬럼:", round_data.columns.tolist())
-                
-                round_data = round_data.copy()
-                round_data['회차'] = round_num
-                all_data = pd.concat([all_data, round_data])
             
-            # 전체 데이터 구조 확인
-            st.write("통합 데이터 컬럼:", all_data.columns.tolist())
+            # 데이터 구조 확인 및 출력
+            st.write("입력 데이터 컬럼:", data.columns.tolist())
             
-            # 정보컴퓨터공학부 데이터만 필터링 (컬럼명 수정)
-            department_column = '학과' if '학과' in all_data.columns else 'department'
-            filtered_data = all_data[all_data[department_column] == '정보컴퓨터공학부'].copy()
-            
-            if filtered_data.empty:
-                st.warning("정보컴퓨터공학부 데이터가 없습니다.")
-                return go.Figure()
+            # 데이터 필터링
+            filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
             
             # 회차별 합격/불합격 학생수 계산
-            pass_column = '합격여부' if '합격여부' in filtered_data.columns else 'pass_fail'
-            summary_data = filtered_data.groupby(['회차', pass_column]).size().reset_index(name='학생수')
+            summary_data = filtered_data.groupby(['No.', '합격여부']).size().reset_index(name='학생수')
             
             # 전체 응시자수 계산
-            total_data = filtered_data.groupby('회차').size().reset_index(name='전체')
+            total_data = filtered_data.groupby('No.').size().reset_index(name='전체')
             
             # 그래프 생성
             fig = go.Figure()
             
             # 합격자 막대 추가
-            pass_data = summary_data[summary_data[pass_column] == '합격']
+            pass_data = summary_data[summary_data['합격여부'] == '합격']
             if not pass_data.empty:
                 fig.add_trace(go.Bar(
                     name='합격',
-                    x=pass_data['회차'],
+                    x=pass_data['No.'],
                     y=pass_data['학생수'],
                     text=pass_data['학생수'].astype(str) + '명',
                     textposition='inside',
@@ -230,11 +217,11 @@ class CodingTestMonitor:
                 ))
             
             # 불합격자 막대 추가
-            fail_data = summary_data[summary_data[pass_column] == '불합격']
+            fail_data = summary_data[summary_data['합격여부'] == '불합격']
             if not fail_data.empty:
                 fig.add_trace(go.Bar(
                     name='불합격',
-                    x=fail_data['회차'],
+                    x=fail_data['No.'],
                     y=fail_data['학생수'],
                     text=fail_data['학생수'].astype(str) + '명',
                     textposition='inside',
@@ -245,7 +232,7 @@ class CodingTestMonitor:
             # 전체 응시자수 선 그래프 추가
             fig.add_trace(go.Scatter(
                 name='전체 응시자',
-                x=total_data['회차'],
+                x=total_data['No.'],
                 y=total_data['전체'],
                 text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
@@ -261,8 +248,8 @@ class CodingTestMonitor:
                 xaxis=dict(
                     title='회차',
                     tickmode='array',
-                    ticktext=[f'{i}회차' for i in sorted(filtered_data['회차'].unique())],
-                    tickvals=sorted(filtered_data['회차'].unique())
+                    ticktext=[f'{i}회차' for i in sorted(filtered_data['No.'].unique())],
+                    tickvals=sorted(filtered_data['No.'].unique())
                 ),
                 yaxis=dict(
                     title=dict(
@@ -293,10 +280,10 @@ class CodingTestMonitor:
             )
             
             # 각 회차별 합격률 주석 추가
-            for round_num in total_data['회차']:
-                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
+            for round_num in total_data['No.']:
+                total = total_data[total_data['No.'] == round_num]['전체'].iloc[0]
                 # 해당 회차의 합격자 수 확인
-                pass_count = pass_data[pass_data['회차'] == round_num]['학생수'].values
+                pass_count = pass_data[pass_data['No.'] == round_num]['학생수'].values
                 passed = pass_count[0] if len(pass_count) > 0 else 0
                 
                 pass_rate = (passed / total) * 100 if total > 0 else 0
