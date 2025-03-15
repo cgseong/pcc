@@ -185,21 +185,22 @@ class CodingTestMonitor:
     def create_performance_heatmap(self, data):
         """모든 회차의 정보컴퓨터공학부 응시자 현황을 시각화합니다."""
         try:
-            # 모든 회차 데이터 통합
-            all_data = pd.DataFrame()
-            for round_num, round_data in self.all_rounds_data.items():
-                round_data = round_data.copy()
-                round_data['회차'] = round_num
-                all_data = pd.concat([all_data, round_data])
+            # 데이터 구조 확인 및 출력
+            st.write("데이터 컬럼:", data.columns.tolist())
             
-            # 정보컴퓨터공학부 데이터만 필터링
-            filtered_data = all_data[all_data['학과'] == '정보컴퓨터공학부'].copy()
+            # 모든 회차 데이터 통합 및 필터링
+            filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
+            
+            # 데이터가 비어있는지 확인
+            if filtered_data.empty:
+                st.warning("정보컴퓨터공학부 데이터가 없습니다.")
+                return go.Figure()
             
             # 회차별 합격/불합격 학생수 계산
-            summary_data = filtered_data.groupby(['회차', '합격여부']).size().reset_index(name='학생수')
+            summary_data = filtered_data.groupby(['No.', '합격여부']).size().reset_index(name='학생수')
             
             # 전체 응시자수 계산
-            total_data = filtered_data.groupby('회차').size().reset_index(name='전체')
+            total_data = filtered_data.groupby('No.').size().reset_index(name='전체')
             
             # 그래프 생성
             fig = go.Figure()
@@ -208,7 +209,7 @@ class CodingTestMonitor:
             pass_data = summary_data[summary_data['합격여부'] == '합격']
             fig.add_trace(go.Bar(
                 name='합격',
-                x=pass_data['회차'],
+                x=pass_data['No.'],
                 y=pass_data['학생수'],
                 text=pass_data['학생수'].astype(str) + '명',
                 textposition='inside',
@@ -220,7 +221,7 @@ class CodingTestMonitor:
             fail_data = summary_data[summary_data['합격여부'] == '불합격']
             fig.add_trace(go.Bar(
                 name='불합격',
-                x=fail_data['회차'],
+                x=fail_data['No.'],
                 y=fail_data['학생수'],
                 text=fail_data['학생수'].astype(str) + '명',
                 textposition='inside',
@@ -231,7 +232,7 @@ class CodingTestMonitor:
             # 전체 응시자수 선 그래프 추가
             fig.add_trace(go.Scatter(
                 name='전체 응시자',
-                x=total_data['회차'],
+                x=total_data['No.'],
                 y=total_data['전체'],
                 text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
@@ -247,8 +248,8 @@ class CodingTestMonitor:
                 xaxis=dict(
                     title='회차',
                     tickmode='array',
-                    ticktext=[f'{i}회차' for i in sorted(filtered_data['회차'].unique())],
-                    tickvals=sorted(filtered_data['회차'].unique())
+                    ticktext=[f'{i}회차' for i in sorted(total_data['No.'].unique())],
+                    tickvals=sorted(total_data['No.'].unique())
                 ),
                 yaxis=dict(
                     title=dict(
@@ -279,9 +280,9 @@ class CodingTestMonitor:
             )
             
             # 각 회차별 합격률 주석 추가
-            for round_num in total_data['회차']:
-                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
-                passed = pass_data[pass_data['회차'] == round_num]['학생수'].iloc[0]
+            for round_num in total_data['No.']:
+                total = total_data[total_data['No.'] == round_num]['전체'].iloc[0]
+                passed = pass_data[pass_data['No.'] == round_num]['학생수'].iloc[0]
                 pass_rate = (passed / total) * 100
                 
                 fig.add_annotation(
@@ -296,7 +297,10 @@ class CodingTestMonitor:
             
             return fig
         except Exception as e:
-            st.error(f"응시자 현황 시각화 중 오류 발생: {e}")
+            st.error(f"응시자 현황 시각화 중 오류 발생: {str(e)}")
+            # 스택 트레이스 출력
+            import traceback
+            st.error(traceback.format_exc())
             return go.Figure()
         
     def create_total_participants_plot(self):
