@@ -183,45 +183,72 @@ class CodingTestMonitor:
             return go.Figure()
     
     def create_performance_heatmap(self, data):
-        """학과별/학년별 성과 히트맵을 생성합니다."""
-        try:
-            filtered_data = data[data['학과'] == '정보컴퓨터공학부']
-            filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
-            # 학과-학년별 평균 점수 계산
-            heatmap_data = filtered_data.pivot_table(
-                values='총점',
-                index='학과',
-                columns='학년',
-                aggfunc='mean'
-            ).round(2)
-            
-            fig = go.Figure(data=go.Heatmap(
-                z=heatmap_data.values,
-                x=[str(int(x)) for x in heatmap_data.columns],
-                y=heatmap_data.index,
-                text=heatmap_data.values.round(1),
-                texttemplate='%{text}',
-                textfont={"size": 10},
-                hoverongaps=False,
-                colorscale='RdYlGn'
-            ))
-            
-            fig.update_layout(
-                title='정보컴퓨터공학부 학년별 평균 점수 분포',
-                xaxis=dict(
-                    title='학년',
-                    tickmode='array',
-                    ticktext=[str(int(x)) for x in heatmap_data.columns],
-                    tickvals=list(range(len(heatmap_data.columns))),
-                    dtick=1
-                ),
-                yaxis_title='학과'
-            )
-            
-            return fig
-        except Exception as e:
-            st.error(f"히트맵 생성 중 오류 발생: {e}")
-            return go.Figure()
+        """정보컴퓨터공학부 학년별 평균 점수를 시각화합니다."""
+    try:
+        **# 정보컴퓨터공학부 데이터만 필터링
+        filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
+        
+        # 학년을 정수로 변환
+        filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
+        
+        # 학년별, 합격여부별 평균 점수 계산
+        avg_scores = filtered_data.groupby(['학년', '합격여부'])['총점'].agg([
+            '평균점수',
+            '학생수'
+        ]).reset_index()
+        
+        # 그래프 생성
+        fig = go.Figure()
+        
+        # 합격자 막대 추가
+        pass_data = avg_scores[avg_scores['합격여부'] == '합격']
+        fig.add_trace(go.Bar(
+            name='합격',
+            x=pass_data['학년'],
+            y=pass_data['평균점수'],
+            text=pass_data['평균점수'].round(1),
+            textposition='auto',
+            marker_color='green',
+            hovertemplate='학년: %{x}<br>평균점수: %{y:.1f}<br>학생수: %{text}<extra></extra>',
+            customdata=pass_data['학생수']
+        ))
+        
+        # 불합격자 막대 추가
+        fail_data = avg_scores[avg_scores['합격여부'] == '불합격']
+        fig.add_trace(go.Bar(
+            name='불합격',
+            x=fail_data['학년'],
+            y=fail_data['평균점수'],
+            text=fail_data['평균점수'].round(1),
+            textposition='auto',
+            marker_color='red',
+            hovertemplate='학년: %{x}<br>평균점수: %{y:.1f}<br>학생수: %{text}<extra></extra>',
+            customdata=fail_data['학생수']
+        ))
+        
+        # 레이아웃 설정
+        fig.update_layout(
+            title='정보컴퓨터공학부 학년별 평균 점수 분포',
+            xaxis=dict(
+                title='학년',
+                tickmode='array',
+                ticktext=['1', '2', '3', '4'],
+                tickvals=[1, 2, 3, 4],
+                dtick=1
+            ),
+            yaxis=dict(
+                title='평균 점수',
+                range=[0, 100]
+            ),
+            barmode='group',
+            bargap=0.15,
+            bargroupgap=0.1
+        )**
+        
+        return fig
+    except Exception as e:
+        st.error(f"점수 분포 시각화 중 오류 발생: {e}")
+        return go.Figure()
     
     def create_performance_radar(self, data, department=None):
         """학과별 종합 성과 레이더 차트를 생성합니다."""
