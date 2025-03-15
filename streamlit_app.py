@@ -188,15 +188,27 @@ class CodingTestMonitor:
             # 모든 회차 데이터 통합
             all_data = pd.DataFrame()
             for round_num, round_data in self.all_rounds_data.items():
+                # 데이터 구조 확인
+                st.write(f"{round_num}회차 데이터 컬럼:", round_data.columns.tolist())
+                
                 round_data = round_data.copy()
                 round_data['회차'] = round_num
                 all_data = pd.concat([all_data, round_data])
             
-            # 정보컴퓨터공학부 데이터만 필터링
-            filtered_data = all_data[all_data['학과'] == '정보컴퓨터공학부'].copy()
+            # 전체 데이터 구조 확인
+            st.write("통합 데이터 컬럼:", all_data.columns.tolist())
+            
+            # 정보컴퓨터공학부 데이터만 필터링 (컬럼명 수정)
+            department_column = '학과' if '학과' in all_data.columns else 'department'
+            filtered_data = all_data[all_data[department_column] == '정보컴퓨터공학부'].copy()
+            
+            if filtered_data.empty:
+                st.warning("정보컴퓨터공학부 데이터가 없습니다.")
+                return go.Figure()
             
             # 회차별 합격/불합격 학생수 계산
-            summary_data = filtered_data.groupby(['회차', '합격여부']).size().reset_index(name='학생수')
+            pass_column = '합격여부' if '합격여부' in filtered_data.columns else 'pass_fail'
+            summary_data = filtered_data.groupby(['회차', pass_column]).size().reset_index(name='학생수')
             
             # 전체 응시자수 계산
             total_data = filtered_data.groupby('회차').size().reset_index(name='전체')
@@ -205,7 +217,7 @@ class CodingTestMonitor:
             fig = go.Figure()
             
             # 합격자 막대 추가
-            pass_data = summary_data[summary_data['합격여부'] == '합격']
+            pass_data = summary_data[summary_data[pass_column] == '합격']
             if not pass_data.empty:
                 fig.add_trace(go.Bar(
                     name='합격',
@@ -218,7 +230,7 @@ class CodingTestMonitor:
                 ))
             
             # 불합격자 막대 추가
-            fail_data = summary_data[summary_data['합격여부'] == '불합격']
+            fail_data = summary_data[summary_data[pass_column] == '불합격']
             if not fail_data.empty:
                 fig.add_trace(go.Bar(
                     name='불합격',
