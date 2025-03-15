@@ -11,6 +11,7 @@ class CodingTestMonitor:
                        '학과', '학년', '학번']
         self.data = pd.DataFrame(columns=self.columns)
         self.test_rounds = []
+        self.all_rounds_data = {}  # 모든 회차 데이터 저장
     
     def load_data(self, file):
         """파일에서 데이터를 로드하고 데이터 타입을 변환합니다."""
@@ -285,7 +286,106 @@ class CodingTestMonitor:
             st.error(f"고급 통계 계산 중 오류 발생: {e}")
             return {}
 
-    
+    def load_all_rounds_data(self):
+        """모든 회차의 데이터를 로드합니다."""
+        try:
+            for round_file in [
+                '부산대학교 PCC_1회 응시 결과.csv',
+                '부산대학교 PCC_2회 응시 결과.csv',
+                '부산대학교 PCC_3회 응시 결과.csv',
+                '부산대학교 PCC_4회 응시 결과.csv'
+            ]:
+                round_num = int(round_file.split('_')[1][0])
+                file = open(round_file, 'r')
+                df = pd.read_csv(file)
+                self.all_rounds_data[round_num] = df
+            return True
+        except Exception as e:
+            st.error(f"전체 회차 데이터 로드 중 오류 발생: {e}")
+            return False
+
+    def get_student_progress(self, email):
+        """특정 학생의 회차별 성과를 추적합니다."""
+        try:
+            progress_data = []
+            for round_num, data in self.all_rounds_data.items():
+                student_data = data[data['이메일'] == email]
+                if not student_data.empty:
+                    progress_data.append({
+                        '회차': round_num,
+                        '총점': student_data['총점'].iloc[0],
+                        '합격여부': student_data['합격여부'].iloc[0],
+                        '등급': student_data['등급(Lv.)'].iloc[0]
+                    })
+            return pd.DataFrame(progress_data)
+        except Exception as e:
+            st.error(f"학생 진행 데이터 추출 중 오류 발생: {e}")
+            return pd.DataFrame()
+
+    def create_student_progress_plots(self, email):
+        """학생의 회차별 성과를 시각화합니다."""
+        try:
+            progress_df = self.get_student_progress(email)
+            if progress_df.empty:
+                return None, None, None
+
+            # 점수 추이 그래프
+            score_fig = go.Figure()
+            score_fig.add_trace(go.Scatter(
+                x=progress_df['회차'],
+                y=progress_df['총점'],
+                mode='lines+markers+text',
+                name='점수',
+                text=progress_df['총점'].round(1),
+                textposition='top center',
+                line=dict(color='blue'),
+                marker=dict(
+                    color=['green' if x == '합격' else 'red' for x in progress_df['합격여부']],
+                    size=12
+                )
+            ))
+            score_fig.update_layout(
+                title='회차별 점수 추이',
+                xaxis_title='회차',
+                yaxis_title='점수',
+                showlegend=False
+            )
+
+            # 등급 변화 그래프
+            grade_fig = go.Figure()
+            grade_fig.add_trace(go.Scatter(
+                x=progress_df['회차'],
+                y=progress_df['등급'],
+                mode='lines+markers+text',
+                text=progress_df['등급'],
+                textposition='top center',
+                line=dict(color='purple'),
+                marker=dict(size=12)
+            ))
+            grade_fig.update_layout(
+                title='회차별 등급 변화',
+                xaxis_title='회차',
+                yaxis_title='등급',
+                showlegend=False
+            )
+
+            # 성과 요약 테이블
+            summary_df = pd.DataFrame({
+                '지표': ['응시 횟수', '평균 점수', '최고 점수', '최저 점수', '합격 횟수'],
+                '값': [
+                    len(progress_df),
+                    progress_df['총점'].mean().round(1),
+                    progress_df['총점'].max().round(1),
+                    progress_df['총점'].min().round(1),
+                    (progress_df['합격여부'] == '합격').sum()
+                ]
+            })
+
+            return score_fig, grade_fig, summary_df
+        except Exception as e:
+            st.error(f"학생 성과 시각화 중 오류 발생: {e}")
+            return None, None, None
+
 
 
 def main():
@@ -452,6 +552,44 @@ def main():
                 if selected_dept:
                     dept_radar_fig = monitor.create_performance_radar(filtered_data, selected_dept)
                     st.plotly_chart(dept_radar_fig, use_container_width=True)
+                    
+            st.header("학생별 성과 분석")
+            
+            # 전체 회차 데이터 로드
+            if monitor.load_all_rounds_data():
+                # 전체 학생 목록 생성
+                all_emails = set()
+                for data in monitor.all_rounds_data.values():
+                    all_emails.update(data['이메일'].unique())
+                
+                # 학생 선택
+                selected_email = st.selectbox(
+                    "분석할 학생 선택",
+                    options=sorted(list(all_emails))
+                )
+                
+                if selected_email:
+                    score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
+                    
+                    if score_fig and grade_fig and summary_df is not None:
+                        # 성과 요약 표시
+                        st.subheader("성과 요약")
+                        st.dataframe(summary_df, hide_index=True)
+                        
+                        # 그래프 표시
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.plotly_chart(score_fig, use_container_width=True)
+                        with col2:
+                            st.plotly_chart(grade_fig, use_container_width=True)
+                        
+                        # 상세 데이터 표시
+                        st.subheader("상세 회차별 데이터")
+                        progress_data = monitor.get_student_progress(selected_email)
+                        st.dataframe(progress_data)
+                    else:
+                        st.warning("선택한 학생의 데이터가 충분하지 않습니다.")
+                    
         except Exception as e:
             st.error(f"데이터 처리 중 오류 발생: {e}")
             st.info("데이터 형식을 확인해주세요.")
