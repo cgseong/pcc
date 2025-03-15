@@ -208,10 +208,10 @@ class CodingTestMonitor:
                 name='합격',
                 x=pass_data['학년'],
                 y=pass_data['평균점수'],
-                **text=[f'평균: {score:.1f}점<br>인원: {count}명' for score, count in zip(pass_data['평균점수'], pass_data['학생수'])],**
+                text=[f'평균: {score:.1f}점<br>인원: {count}명' for score, count in zip(pass_data['평균점수'], pass_data['학생수'])],
                 textposition='auto',
                 marker_color='green',
-                **hovertemplate='%{x}학년<br>평균: %{y:.1f}점<br>인원: %{customdata}명<extra></extra>',**
+                hovertemplate='%{x}학년<br>평균: %{y:.1f}점<br>인원: %{customdata}명<extra></extra>',
                 customdata=pass_data['학생수']
             ))
             
