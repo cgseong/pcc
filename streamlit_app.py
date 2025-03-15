@@ -263,16 +263,20 @@ class CodingTestMonitor:
                     dtick=1
                 ),
                 yaxis=dict(
-                    title='평균 점수',
+                    title=dict(
+                        text='평균 점수',
+                        font=dict(color='black')
+                    ),
                     range=[0, 100],
-                    titlefont=dict(color='black'),
                     tickfont=dict(color='black')
                 ),
                 yaxis2=dict(
-                    title='학생수',
+                    title=dict(
+                        text='학생수',
+                        font=dict(color='gray')
+                    ),
                     overlaying='y',
                     side='right',
-                    titlefont=dict(color='gray'),
                     tickfont=dict(color='gray')
                 ),
                 showlegend=True,
@@ -290,9 +294,8 @@ class CodingTestMonitor:
             return fig
         except Exception as e:
             st.error(f"점수 분포 시각화 중 오류 발생: {e}")
-            return go.Figure()
+            return go.Figure()        
             
-        
     def create_performance_radar(self, data, department=None):
         """학과별 종합 성과 레이더 차트를 생성합니다."""
         try:
