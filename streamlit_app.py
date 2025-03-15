@@ -344,23 +344,81 @@ class CodingTestMonitor:
             st.error(f"레이더 차트 생성 중 오류 발생: {e}")
             return go.Figure()
         
-    def create_score_box_plot(self, data):
-        """학과별 점수 분포 박스플롯을 생성합니다."""
+    def create_score_box_plot(self):
+        """전체 회차 정보컴퓨터공학부 학년별 점수 분포 박스플롯을 생성합니다."""
         try:
-            filtered_data = data[data['학과'] == '정보컴퓨터공학부']
-            fig = px.box(filtered_data, x='학년', y='총점',
+            # 모든 회차 데이터 통합
+            all_data = pd.DataFrame()
+            for round_num, round_data in self.all_rounds_data.items():
+                round_data = round_data.copy()
+                round_data['회차'] = round_num
+                # 정보컴퓨터공학부 데이터만 필터링
+                dept_data = round_data[round_data['학과'] == '정보컴퓨터공학부'].copy()
+                if not dept_data.empty:
+                    all_data = pd.concat([all_data, dept_data])
+            
+            if all_data.empty:
+                st.warning("정보컴퓨터공학부 데이터가 없습니다.")
+                return go.Figure()
+            
+            # 학년을 정수로 변환
+            all_data['학년'] = pd.to_numeric(all_data['학년'], errors='coerce').astype('Int64')
+            
+            # 박스플롯 생성
+            fig = px.box(all_data, 
+                        x='학년', 
+                        y='총점',
+                        color='합격여부',
                         title='정보컴퓨터공학부 학년별 점수 분포',
                         points='all',  # 모든 데이터 포인트 표시
-                        color='합격여부')
+                        labels={'학년': '학년', '총점': '점수', '합격여부': '합격 여부'},
+                        category_orders={'학년': [1, 2, 3, 4]},  # 학년 순서 지정
+                        color_discrete_map={'합격': 'green', '불합격': 'red'}  # 색상 지정
+                        )
             
+            # 레이아웃 업데이트
             fig.update_layout(
-                xaxis_title='학과',
-                yaxis_title='점수'
+                xaxis_title='학년',
+                yaxis_title='점수',
+                xaxis=dict(
+                    tickmode='array',
+                    ticktext=['1학년', '2학년', '3학년', '4학년'],
+                    tickvals=[1, 2, 3, 4]
+                ),
+                yaxis=dict(range=[0, 100]),  # y축 범위 설정
+                boxmode='group',  # 합격/불합격 박스를 나란히 표시
+                height=600,
+                width=800,
+                showlegend=True,
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="right",
+                    x=0.99
+                )
             )
+            
+            # 각 학년별 통계 정보 추가
+            for grade in sorted(all_data['학년'].unique()):
+                grade_data = all_data[all_data['학년'] == grade]
+                total_students = len(grade_data)
+                pass_rate = (grade_data['합격여부'] == '합격').mean() * 100
+                avg_score = grade_data['총점'].mean()
+                
+                fig.add_annotation(
+                    x=grade,
+                    y=95,  # 상단에 표시
+                    text=f'총 {total_students}명<br>평균: {avg_score:.1f}점<br>합격률: {pass_rate:.1f}%',
+                    showarrow=False,
+                    font=dict(size=10),
+                    align='center'
+                )
             
             return fig
         except Exception as e:
-            st.error(f"박스플롯 생성 중 오류 발생: {e}")
+            st.error(f"박스플롯 생성 중 오류 발생: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
             return go.Figure()
 
     def calculate_advanced_statistics(self, data):
@@ -792,7 +850,7 @@ def main():
                 
                 with col2:
                     # 박스플롯 표시
-                    box_fig = monitor.create_score_box_plot(filtered_data)
+                    box_fig = monitor.create_score_box_plot()  # 인자 제거
                     st.plotly_chart(box_fig, use_container_width=True)
             
             with tab2:
