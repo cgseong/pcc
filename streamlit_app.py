@@ -361,8 +361,10 @@ class CodingTestMonitor:
                 st.warning("정보컴퓨터공학부 데이터가 없습니다.")
                 return go.Figure()
             
-            # 학년을 정수로 변환
-            all_data['학년'] = pd.to_numeric(all_data['학년'], errors='coerce').astype('Int64')
+            # 학년을 정수로 변환하고 결측값 처리
+            all_data['학년'] = pd.to_numeric(all_data['학년'], errors='coerce')
+            all_data = all_data.dropna(subset=['학년'])  # 학년 결측값이 있는 행 제거
+            all_data['학년'] = all_data['학년'].astype(int)  # 정수로 변환
             
             # 박스플롯 생성
             fig = px.box(all_data, 
@@ -399,20 +401,22 @@ class CodingTestMonitor:
             )
             
             # 각 학년별 통계 정보 추가
-            for grade in sorted(all_data['학년'].unique()):
+            existing_grades = sorted(all_data['학년'].unique())  # 실제 존재하는 학년만 처리
+            for grade in existing_grades:
                 grade_data = all_data[all_data['학년'] == grade]
                 total_students = len(grade_data)
-                pass_rate = (grade_data['합격여부'] == '합격').mean() * 100
-                avg_score = grade_data['총점'].mean()
-                
-                fig.add_annotation(
-                    x=grade,
-                    y=95,  # 상단에 표시
-                    text=f'총 {total_students}명<br>평균: {avg_score:.1f}점<br>합격률: {pass_rate:.1f}%',
-                    showarrow=False,
-                    font=dict(size=10),
-                    align='center'
-                )
+                if total_students > 0:  # 해당 학년의 데이터가 있는 경우만 처리
+                    pass_rate = (grade_data['합격여부'] == '합격').mean() * 100
+                    avg_score = grade_data['총점'].mean()
+                    
+                    fig.add_annotation(
+                        x=grade,
+                        y=95,  # 상단에 표시
+                        text=f'총 {total_students}명<br>평균: {avg_score:.1f}점<br>합격률: {pass_rate:.1f}%',
+                        showarrow=False,
+                        font=dict(size=10),
+                        align='center'
+                    )
             
             return fig
         except Exception as e:
