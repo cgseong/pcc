@@ -10,6 +10,7 @@ class CodingTestMonitor:
         self.columns = ['No.', '시험과목',  '이메일', '합격여부', '총점', '등급(Lv.)', 
                        '학과', '학년', '학번']
         self.data = pd.DataFrame(columns=self.columns)
+        self.test_rounds = []
     
     def load_data(self, file):
         """파일에서 데이터를 로드하고 데이터 타입을 변환합니다."""
@@ -179,6 +180,112 @@ class CodingTestMonitor:
         except Exception as e:
             st.error(f"등급 분포 시각화 중 오류 발생: {e}")
             return go.Figure()
+    
+    def create_performance_heatmap(self, data):
+        """학과별/학년별 성과 히트맵을 생성합니다."""
+        try:
+            # 학과-학년별 평균 점수 계산
+            heatmap_data = data.pivot_table(
+                values='총점',
+                index='학과',
+                columns='학년',
+                aggfunc='mean'
+            ).round(2)
+            
+            fig = go.Figure(data=go.Heatmap(
+                z=heatmap_data.values,
+                x=heatmap_data.columns,
+                y=heatmap_data.index,
+                text=heatmap_data.values.round(1),
+                texttemplate='%{text}',
+                textfont={"size": 10},
+                hoverongaps=False,
+                colorscale='RdYlGn'
+            ))
+            
+            fig.update_layout(
+                title='학과-학년별 평균 점수 분포',
+                xaxis_title='학년',
+                yaxis_title='학과'
+            )
+            
+            return fig
+        except Exception as e:
+            st.error(f"히트맵 생성 중 오류 발생: {e}")
+            return go.Figure()
+    
+    def create_performance_radar(self, data, department=None):
+        """학과별 종합 성과 레이더 차트를 생성합니다."""
+        try:
+            if department:
+                dept_data = data[data['학과'] == department]
+            else:
+                dept_data = data
+            
+            metrics = {
+                '평균점수': dept_data['총점'].mean() / 100,  # 정규화
+                '합격률': (dept_data['합격여부'] == '합격').mean(),
+                '상위등급비율': (dept_data['등급(Lv.)'].isin(['A', 'B'])).mean(),
+                '참여율': len(dept_data) / len(data),
+                '개선도': 0.5  # 기본값, 시계열 데이터 필요
+            }
+            
+            fig = go.Figure(data=go.Scatterpolar(
+                r=list(metrics.values()),
+                theta=list(metrics.keys()),
+                fill='toself'
+            ))
+            
+            fig.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True,
+                        range=[0, 1]
+                    )),
+                showlegend=False,
+                title=f"{'전체' if not department else department} 종합 성과 분석"
+            )
+            
+            return fig
+        except Exception as e:
+            st.error(f"레이더 차트 생성 중 오류 발생: {e}")
+            return go.Figure()
+        
+    def create_score_box_plot(self, data):
+        """학과별 점수 분포 박스플롯을 생성합니다."""
+        try:
+            fig = px.box(data, x='학과', y='총점',
+                        title='학과별 점수 분포',
+                        points='all',  # 모든 데이터 포인트 표시
+                        color='합격여부')
+            
+            fig.update_layout(
+                xaxis_title='학과',
+                yaxis_title='점수'
+            )
+            
+            return fig
+        except Exception as e:
+            st.error(f"박스플롯 생성 중 오류 발생: {e}")
+            return go.Figure()
+
+    def calculate_advanced_statistics(self, data):
+        """고급 통계 정보를 계산합니다."""
+        try:
+            stats = {
+                '표준편차': data['총점'].std(),
+                '중앙값': data['총점'].median(),
+                '최고점수': data['총점'].max(),
+                '최저점수': data['총점'].min(),
+                '상위 10% 평균': data['총점'].nlargest(int(len(data)*0.1)).mean(),
+                '하위 10% 평균': data['총점'].nsmallest(int(len(data)*0.1)).mean()
+            }
+            return stats
+        except Exception as e:
+            st.error(f"고급 통계 계산 중 오류 발생: {e}")
+            return {}
+
+    
 
 
 def main():
@@ -303,6 +410,53 @@ def main():
         except Exception as e:
             st.error(f"데이터 처리 중 오류 발생: {e}")
             st.info("데이터 형식을 확인해주세요.")
+    
+    # 고급 분석 섹션
+            st.header("고급 분석")
+            
+            # 탭 생성
+            tab1, tab2, tab3 = st.tabs(["성과 분포", "상세 통계", "종합 분석"])
+            
+            with tab1:
+                col1, col2 = st.columns(2)
+                with col1:
+                    # 히트맵 표시
+                    heatmap_fig = monitor.create_performance_heatmap(filtered_data)
+                    st.plotly_chart(heatmap_fig, use_container_width=True)
+                
+                with col2:
+                    # 박스플롯 표시
+                    box_fig = monitor.create_score_box_plot(filtered_data)
+                    st.plotly_chart(box_fig, use_container_width=True)
+            
+            with tab2:
+                # 고급 통계 정보 표시
+                advanced_stats = monitor.calculate_advanced_statistics(filtered_data)
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("표준편차", f"{advanced_stats.get('표준편차', 0):.1f}")
+                    st.metric("중앙값", f"{advanced_stats.get('중앙값', 0):.1f}")
+                with col2:
+                    st.metric("최고점수", f"{advanced_stats.get('최고점수', 0):.1f}")
+                    st.metric("최저점수", f"{advanced_stats.get('최저점수', 0):.1f}")
+                with col3:
+                    st.metric("상위 10% 평균", f"{advanced_stats.get('상위 10% 평균', 0):.1f}")
+                    st.metric("하위 10% 평균", f"{advanced_stats.get('하위 10% 평균', 0):.1f}")
+            
+            with tab3:
+                # 전체 레이더 차트
+                radar_fig = monitor.create_performance_radar(filtered_data)
+                st.plotly_chart(radar_fig, use_container_width=True)
+                
+                # 학과별 레이더 차트
+                selected_dept = st.selectbox(
+                    "학과 선택",
+                    options=sorted(filtered_data['학과'].unique())
+                )
+                if selected_dept:
+                    dept_radar_fig = monitor.create_performance_radar(filtered_data, selected_dept)
+                    st.plotly_chart(dept_radar_fig, use_container_width=True)
     else:
         st.warning("업로드된 파일에 데이터가 없습니다.")
 
