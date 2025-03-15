@@ -555,10 +555,10 @@ def main():
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
             # 고급 분석 섹션
-            st.header("고급 분석")
+            st.header("추가 분석")
             
             # 탭 생성
-            tab1, tab2, tab3 = st.tabs(["성과 분포", "상세 통계", "종합 분석"])
+            tab1, tab2 = st.tabs(["성과 분포", "상세 통계"])
             
             with tab1:
                 col1, col2 = st.columns(2)
@@ -585,22 +585,8 @@ def main():
                     st.metric("최저점수", f"{advanced_stats.get('최저점수', 0):.1f}")
                 with col3:
                     st.metric("상위 10% 평균", f"{advanced_stats.get('상위 10% 평균', 0):.1f}")
-                    st.metric("하위 10% 평균", f"{advanced_stats.get('하위 10% 평균', 0):.1f}")
-            
-            with tab3:
-                # 전체 레이더 차트
-                radar_fig = monitor.create_performance_radar(filtered_data)
-                st.plotly_chart(radar_fig, use_container_width=True)
-                
-                # 학과별 레이더 차트
-                selected_dept = st.selectbox(
-                    "학과 선택",
-                    options=sorted(filtered_data['학과'].unique())
-                )
-                if selected_dept:
-                    dept_radar_fig = monitor.create_performance_radar(filtered_data, selected_dept)
-                    st.plotly_chart(dept_radar_fig, use_container_width=True)
-                    
+                    st.metric("하위 10% 평균", f"{advanced_stats.get('하위 10% 평균', 0):.1f}")        
+                                
             st.header("학생별 성과 분석")
             
             # 전체 회차 데이터 로드
