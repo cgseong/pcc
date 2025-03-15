@@ -245,11 +245,10 @@ class CodingTestMonitor:
                 bargroupgap=0.1
             )            
             return fig
-    except Exception as e:
-        st.error(f"점수 분포 시각화 중 오류 발생: {e}")
-        return go.Figure()      
-   
-    
+        except Exception as e:
+            st.error(f"점수 분포 시각화 중 오류 발생: {e}")
+            return go.Figure()         
+        
     def create_performance_radar(self, data, department=None):
         """학과별 종합 성과 레이더 차트를 생성합니다."""
         try:
