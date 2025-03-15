@@ -662,6 +662,14 @@ def main():
                     # 박스플롯 표시
                     box_fig = monitor.create_score_box_plot(filtered_data)
                     st.plotly_chart(box_fig, use_container_width=True)
+                
+                # **추가된 부분: 전체 회차 응시자 현황 시각화**
+                st.subheader("전체 회차 응시자 현황")
+                if monitor.load_all_rounds_data():  # 모든 회차 데이터 로드
+                    participants_fig = monitor.create_performance_heatmap(monitor.data)
+                    st.plotly_chart(participants_fig, use_container_width=True)
+                else:
+                    st.warning("전체 회차 데이터를 로드할 수 없습니다.")
             
             with tab2:
                 # 고급 통계 정보 표시
