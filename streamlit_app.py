@@ -196,7 +196,7 @@ class CodingTestMonitor:
             
             fig = go.Figure(data=go.Heatmap(
                 z=heatmap_data.values,
-                x=heatmap_data.columns,
+                [str(int(x)) for x in heatmap_data.columns],
                 y=heatmap_data.index,
                 text=heatmap_data.values.round(1),
                 texttemplate='%{text}',
