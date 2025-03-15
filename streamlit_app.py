@@ -525,6 +525,134 @@ class CodingTestMonitor:
             st.error(f"학생 성과 시각화 중 오류 발생: {e}")
             return None, None, None
 
+    def create_performance_heatmap(self):
+        """모든 회차의 정보컴퓨터공학부 응시자 현황을 시각화합니다."""
+        try:
+            # 모든 회차 데이터 통합
+            all_data = pd.DataFrame()
+            for round_num, round_data in self.all_rounds_data.items():
+                round_data = round_data.copy()
+                # 정보컴퓨터공학부 데이터만 필터링
+                dept_data = round_data[round_data['학과'] == '정보컴퓨터공학부'].copy()
+                if not dept_data.empty:
+                    dept_data['회차'] = round_num
+                    all_data = pd.concat([all_data, dept_data])
+            
+            if all_data.empty:
+                st.warning("정보컴퓨터공학부 데이터가 없습니다.")
+                return go.Figure()
+                
+            # 회차별 합격/불합격 학생수 계산
+            summary_data = all_data.groupby(['회차', '합격여부']).size().reset_index(name='학생수')
+            
+            # 전체 응시자수 계산
+            total_data = all_data.groupby('회차').size().reset_index(name='전체')
+            
+            # 그래프 생성
+            fig = go.Figure()
+            
+            # 합격자 막대 추가
+            pass_data = summary_data[summary_data['합격여부'] == '합격']
+            if not pass_data.empty:
+                fig.add_trace(go.Bar(
+                    name='합격',
+                    x=pass_data['회차'],
+                    y=pass_data['학생수'],
+                    text=pass_data['학생수'].astype(str) + '명',
+                    textposition='inside',
+                    marker_color='green',
+                    yaxis='y'
+                ))
+            
+            # 불합격자 막대 추가
+            fail_data = summary_data[summary_data['합격여부'] == '불합격']
+            if not fail_data.empty:
+                fig.add_trace(go.Bar(
+                    name='불합격',
+                    x=fail_data['회차'],
+                    y=fail_data['학생수'],
+                    text=fail_data['학생수'].astype(str) + '명',
+                    textposition='inside',
+                    marker_color='red',
+                    yaxis='y'
+                ))
+            
+            # 전체 응시자수 선 그래프 추가
+            fig.add_trace(go.Scatter(
+                name='전체 응시자',
+                x=total_data['회차'],
+                y=total_data['전체'],
+                text=total_data['전체'].astype(str) + '명',
+                textposition='top center',
+                mode='lines+markers+text',
+                marker=dict(size=10, color='blue'),
+                line=dict(color='blue', width=3),
+                yaxis='y2'
+            ))
+            
+            # 레이아웃 설정
+            fig.update_layout(
+                title='정보컴퓨터공학부 회차별 응시자 현황',
+                xaxis=dict(
+                    title='회차',
+                    tickmode='array',
+                    ticktext=[f'{i}회차' for i in sorted(all_data['회차'].unique())],
+                    tickvals=sorted(all_data['회차'].unique())
+                ),
+                yaxis=dict(
+                    title=dict(
+                        text='합격/불합격 학생수',
+                        font=dict(color='black')
+                    ),
+                    tickfont=dict(color='black')
+                ),
+                yaxis2=dict(
+                    title=dict(
+                        text='전체 응시자수',
+                        font=dict(color='blue')
+                    ),
+                    overlaying='y',
+                    side='right',
+                    tickfont=dict(color='blue')
+                ),
+                showlegend=True,
+                legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="right",
+                    x=0.99
+                ),
+                barmode='stack',
+                height=600,
+                width=1000
+            )
+            
+            # 각 회차별 합격률 주석 추가
+            for round_num in total_data['회차']:
+                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
+                # 해당 회차의 합격자 수 확인
+                pass_count = pass_data[pass_data['회차'] == round_num]['학생수'].values
+                passed = pass_count[0] if len(pass_count) > 0 else 0
+                
+                pass_rate = (passed / total) * 100 if total > 0 else 0
+                
+                fig.add_annotation(
+                    x=round_num,
+                    y=total,
+                    text=f'합격률: {pass_rate:.1f}%',
+                    showarrow=True,
+                    arrowhead=4,
+                    yshift=20,
+                    font=dict(size=12)
+                )
+            
+            return fig
+        except Exception as e:
+            st.error(f"응시자 현황 시각화 중 오류 발생: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
+            return go.Figure()
+
 
 
 def main():
@@ -654,22 +782,18 @@ def main():
             with tab1:
                 col1, col2 = st.columns(2)
                 with col1:
-                    # 히트맵 표시
-                    heatmap_fig = monitor.create_performance_heatmap(filtered_data)
-                    st.plotly_chart(heatmap_fig, use_container_width=True)
+                    # 기존의 히트맵 대신 전체 회차 응시자 현황 표시
+                    st.subheader("전체 회차 응시자 현황")
+                    if monitor.load_all_rounds_data():
+                        participants_fig = monitor.create_performance_heatmap()
+                        st.plotly_chart(participants_fig, use_container_width=True)
+                    else:
+                        st.warning("전체 회차 데이터를 로드할 수 없습니다.")
                 
                 with col2:
                     # 박스플롯 표시
                     box_fig = monitor.create_score_box_plot(filtered_data)
                     st.plotly_chart(box_fig, use_container_width=True)
-                
-                # **추가된 부분: 전체 회차 응시자 현황 시각화**
-                st.subheader("전체 회차 응시자 현황")
-                if monitor.load_all_rounds_data():  # 모든 회차 데이터 로드
-                    participants_fig = monitor.create_performance_heatmap(monitor.data)
-                    st.plotly_chart(participants_fig, use_container_width=True)
-                else:
-                    st.warning("전체 회차 데이터를 로드할 수 없습니다.")
             
             with tab2:
                 # 고급 통계 정보 표시
