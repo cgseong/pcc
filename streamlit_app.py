@@ -183,78 +183,73 @@ class CodingTestMonitor:
             return go.Figure()
 
     def create_performance_heatmap(self, data):
-        """정보컴퓨터공학부 학년별 평균 점수와 학생수를 시각화합니다."""
+        """모든 회차의 정보컴퓨터공학부 학년별 평균 점수와 학생수를 시각화합니다."""
         try:
+            # 모든 회차 데이터 통합
+            all_data = pd.DataFrame()
+            for round_num, round_data in self.all_rounds_data.items():
+                round_data = round_data.copy()
+                round_data['회차'] = round_num
+                all_data = pd.concat([all_data, round_data])
+            
             # 정보컴퓨터공학부 데이터만 필터링
-            filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
+            filtered_data = all_data[all_data['학과'] == '정보컴퓨터공학부'].copy()
             
             # 학년을 정수로 변환
             filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
             
-            # 학년별, 합격여부별 평균 점수와 학생수 계산
-            avg_scores = filtered_data.groupby(['학년', '합격여부']).agg({
+            # 회차별, 학년별, 합격여부별 평균 점수와 학생수 계산
+            avg_scores = filtered_data.groupby(['회차', '학년', '합격여부']).agg({
                 '총점': ['mean', 'count']
             }).reset_index()
             
             # 컬럼명 변경
-            avg_scores.columns = ['학년', '합격여부', '평균점수', '학생수']
+            avg_scores.columns = ['회차', '학년', '합격여부', '평균점수', '학생수']
             
             # 그래프 생성
             fig = go.Figure()
             
-            # 합격자 평균 점수 막대 추가
-            pass_data = avg_scores[avg_scores['합격여부'] == '합격']
-            fig.add_trace(go.Bar(
-                name='합격자 평균',
-                x=pass_data['학년'],
-                y=pass_data['평균점수'],
-                text=pass_data['평균점수'].round(1).astype(str) + '점',
-                textposition='auto',
-                marker_color='green',
-                yaxis='y'
-            ))
+            # 각 회차별로 그래프 추가
+            colors = ['rgba(0, 128, 0, ', 'rgba(255, 0, 0, ']  # 합격(초록), 불합격(빨강)
+            line_colors = ['rgba(144, 238, 144, ', 'rgba(240, 128, 128, ']  # 연한 초록, 연한 빨강
             
-            # 불합격자 평균 점수 막대 추가
-            fail_data = avg_scores[avg_scores['합격여부'] == '불합격']
-            fig.add_trace(go.Bar(
-                name='불합격자 평균',
-                x=fail_data['학년'],
-                y=fail_data['평균점수'],
-                text=fail_data['평균점수'].round(1).astype(str) + '점',
-                textposition='auto',
-                marker_color='red',
-                yaxis='y'
-            ))
-            
-            # 합격자 학생수 선 그래프 추가
-            fig.add_trace(go.Scatter(
-                name='합격자 수',
-                x=pass_data['학년'],
-                y=pass_data['학생수'],
-                text=pass_data['학생수'].astype(str) + '명',
-                textposition='top center',
-                mode='lines+markers+text',
-                marker=dict(size=8, color='lightgreen'),
-                line=dict(color='lightgreen', width=2),
-                yaxis='y2'
-            ))
-            
-            # 불합격자 학생수 선 그래프 추가
-            fig.add_trace(go.Scatter(
-                name='불합격자 수',
-                x=fail_data['학년'],
-                y=fail_data['학생수'],
-                text=fail_data['학생수'].astype(str) + '명',
-                textposition='bottom center',
-                mode='lines+markers+text',
-                marker=dict(size=8, color='lightcoral'),
-                line=dict(color='lightcoral', width=2),
-                yaxis='y2'
-            ))
+            for pass_status, base_color, line_base_color in zip(['합격', '불합격'], colors, line_colors):
+                for round_num in sorted(avg_scores['회차'].unique()):
+                    round_data = avg_scores[(avg_scores['회차'] == round_num) & 
+                                         (avg_scores['합격여부'] == pass_status)]
+                    
+                    # 막대 그래프 (평균 점수)
+                    opacity = 0.3 + (0.7 * round_num / len(self.all_rounds_data))
+                    fig.add_trace(go.Bar(
+                        name=f'{round_num}회차 {pass_status}자 평균',
+                        x=round_data['학년'],
+                        y=round_data['평균점수'],
+                        text=round_data['평균점수'].round(1).astype(str) + '점',
+                        textposition='auto',
+                        marker_color=base_color + str(opacity) + ')',
+                        yaxis='y',
+                        legendgroup=f'round_{round_num}',
+                        showlegend=True
+                    ))
+                    
+                    # 선 그래프 (학생수)
+                    fig.add_trace(go.Scatter(
+                        name=f'{round_num}회차 {pass_status}자 수',
+                        x=round_data['학년'],
+                        y=round_data['학생수'],
+                        text=round_data['학생수'].astype(str) + '명',
+                        textposition='top center',
+                        mode='lines+markers+text',
+                        marker=dict(size=8),
+                        line=dict(color=line_base_color + str(opacity) + ')', width=2),
+                        yaxis='y2',
+                        legendgroup=f'round_{round_num}',
+                        showlegend=True
+                    ))
             
             # 레이아웃 설정
             fig.update_layout(
-                title='정보컴퓨터공학부 학년별 평균 점수와 학생수',
+                title='정보컴퓨터공학부 회차별/학년별 평균 점수와 학생수',
                 xaxis=dict(
                     title='학년',
                     tickmode='array',
@@ -283,18 +278,20 @@ class CodingTestMonitor:
                 legend=dict(
                     yanchor="top",
                     y=0.99,
-                    xanchor="right",
-                    x=0.99
+                    xanchor="left",
+                    x=1.1
                 ),
                 barmode='group',
                 bargap=0.15,
-                bargroupgap=0.1
+                bargroupgap=0.1,
+                height=800,  # 그래프 높이 증가
+                width=1200   # 그래프 너비 증가
             )
             
             return fig
         except Exception as e:
             st.error(f"점수 분포 시각화 중 오류 발생: {e}")
-            return go.Figure()        
+            return go.Figure()
             
     def create_performance_radar(self, data, department=None):
         """학과별 종합 성과 레이더 차트를 생성합니다."""
