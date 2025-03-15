@@ -185,10 +185,7 @@ class CodingTestMonitor:
     def create_performance_heatmap(self, data):
         """모든 회차의 정보컴퓨터공학부 응시자 현황을 시각화합니다."""
         try:
-            # 데이터 구조 확인 및 출력
-            st.write("데이터 컬럼:", data.columns.tolist())
-            
-            # 모든 회차 데이터 통합 및 필터링
+            # 데이터 필터링
             filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
             
             # 데이터가 비어있는지 확인
@@ -207,27 +204,29 @@ class CodingTestMonitor:
             
             # 합격자 막대 추가
             pass_data = summary_data[summary_data['합격여부'] == '합격']
-            fig.add_trace(go.Bar(
-                name='합격',
-                x=pass_data['No.'],
-                y=pass_data['학생수'],
-                text=pass_data['학생수'].astype(str) + '명',
-                textposition='inside',
-                marker_color='green',
-                yaxis='y'
-            ))
+            if not pass_data.empty:
+                fig.add_trace(go.Bar(
+                    name='합격',
+                    x=pass_data['No.'],
+                    y=pass_data['학생수'],
+                    text=pass_data['학생수'].astype(str) + '명',
+                    textposition='inside',
+                    marker_color='green',
+                    yaxis='y'
+                ))
             
             # 불합격자 막대 추가
             fail_data = summary_data[summary_data['합격여부'] == '불합격']
-            fig.add_trace(go.Bar(
-                name='불합격',
-                x=fail_data['No.'],
-                y=fail_data['학생수'],
-                text=fail_data['학생수'].astype(str) + '명',
-                textposition='inside',
-                marker_color='red',
-                yaxis='y'
-            ))
+            if not fail_data.empty:
+                fig.add_trace(go.Bar(
+                    name='불합격',
+                    x=fail_data['No.'],
+                    y=fail_data['학생수'],
+                    text=fail_data['학생수'].astype(str) + '명',
+                    textposition='inside',
+                    marker_color='red',
+                    yaxis='y'
+                ))
             
             # 전체 응시자수 선 그래프 추가
             fig.add_trace(go.Scatter(
@@ -282,8 +281,11 @@ class CodingTestMonitor:
             # 각 회차별 합격률 주석 추가
             for round_num in total_data['No.']:
                 total = total_data[total_data['No.'] == round_num]['전체'].iloc[0]
-                passed = pass_data[pass_data['No.'] == round_num]['학생수'].iloc[0]
-                pass_rate = (passed / total) * 100
+                # 해당 회차의 합격자 수 확인
+                pass_count = pass_data[pass_data['No.'] == round_num]['학생수'].values
+                passed = pass_count[0] if len(pass_count) > 0 else 0
+                
+                pass_rate = (passed / total) * 100 if total > 0 else 0
                 
                 fig.add_annotation(
                     x=round_num,
@@ -298,7 +300,6 @@ class CodingTestMonitor:
             return fig
         except Exception as e:
             st.error(f"응시자 현황 시각화 중 오류 발생: {str(e)}")
-            # 스택 트레이스 출력
             import traceback
             st.error(traceback.format_exc())
             return go.Figure()
