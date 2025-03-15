@@ -623,7 +623,7 @@ class CodingTestMonitor:
                     text=pass_data['학생수'].astype(str) + '명',
                     textposition='inside',
                     marker_color='green',
-                    yaxis='y'
+                    showlegend=False                    
                 ))
             
             # 불합격자 막대 추가
@@ -636,7 +636,7 @@ class CodingTestMonitor:
                     text=fail_data['학생수'].astype(str) + '명',
                     textposition='inside',
                     marker_color='red',
-                    yaxis='y'
+                    showlegend=False                    
                 ))
             
             # 전체 응시자수 선 그래프 추가
@@ -648,8 +648,9 @@ class CodingTestMonitor:
                 textposition='top center',
                 mode='lines+markers+text',
                 marker=dict(size=10, color='blue'),
-                line=dict(color='blue', width=3),
-                yaxis='y2'
+                line=dict(color='blue', width=3),                
+                yaxis='y2',
+                showlegend=False
             ))
             
             # 레이아웃 설정
