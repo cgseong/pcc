@@ -381,7 +381,12 @@ class CodingTestMonitor:
             ))
             score_fig.update_layout(
                 title='회차별 점수 추이',
-                xaxis_title='회차',
+                **xaxis=dict(
+                title='회차',
+                tickmode='array',
+                ticktext=progress_df['회차'].astype(int),
+                tickvals=progress_df['회차'],
+                dtick=1)  # 정수,
                 yaxis_title='점수',
                 showlegend=False
             )
@@ -399,7 +404,13 @@ class CodingTestMonitor:
             ))
             grade_fig.update_layout(
                 title='회차별 등급 변화',
-                xaxis_title='회차',
+                xaxis=dict(
+                title='회차',
+                tickmode='array',
+                ticktext=progress_df['회차'].astype(int),
+                tickvals=progress_df['회차'],
+                dtick=1  # 정수 간격으로 표시
+            ),
                 yaxis_title='등급',
                 showlegend=False
             )
