@@ -345,16 +345,16 @@ class CodingTestMonitor:
             return go.Figure()
         
     def create_score_box_plot(self):
-        """전체 회차 정보컴퓨터공학부 학년별 점수 분포 박스플롯을 생성합니다."""
+        """전체 회차 정보컴퓨터공학부 학년별 합격/불합격 점수 분포 박스플롯을 생성합니다."""
         try:
             # 모든 회차 데이터 통합
             all_data = pd.DataFrame()
             for round_num, round_data in self.all_rounds_data.items():
                 round_data = round_data.copy()
-                round_data['회차'] = round_num
                 # 정보컴퓨터공학부 데이터만 필터링
                 dept_data = round_data[round_data['학과'] == '정보컴퓨터공학부'].copy()
                 if not dept_data.empty:
+                    dept_data['회차'] = round_num
                     all_data = pd.concat([all_data, dept_data])
             
             if all_data.empty:
@@ -367,30 +367,48 @@ class CodingTestMonitor:
             all_data['학년'] = all_data['학년'].astype(int)  # 정수로 변환
             
             # 박스플롯 생성
-            fig = px.box(all_data, 
-                        x='학년', 
-                        y='총점',
-                        color='합격여부',
-                        title='정보컴퓨터공학부 학년별 점수 분포',
-                        points='all',  # 모든 데이터 포인트 표시
-                        labels={'학년': '학년', '총점': '점수', '합격여부': '합격 여부'},
-                        category_orders={'학년': [1, 2, 3, 4]},  # 학년 순서 지정
-                        color_discrete_map={'합격': 'green', '불합격': 'red'}  # 색상 지정
-                        )
+            fig = go.Figure()
             
-            # 레이아웃 업데이트
+            # 합격자 박스플롯 추가
+            pass_data = all_data[all_data['합격여부'] == '합격']
+            if not pass_data.empty:
+                fig.add_trace(go.Box(
+                    x=pass_data['학년'],
+                    y=pass_data['총점'],
+                    name='합격',
+                    boxpoints='all',  # 모든 데이터 포인트 표시
+                    marker_color='green',
+                    showlegend=True
+                ))
+            
+            # 불합격자 박스플롯 추가
+            fail_data = all_data[all_data['합격여부'] == '불합격']
+            if not fail_data.empty:
+                fig.add_trace(go.Box(
+                    x=fail_data['학년'],
+                    y=fail_data['총점'],
+                    name='불합격',
+                    boxpoints='all',  # 모든 데이터 포인트 표시
+                    marker_color='red',
+                    showlegend=True
+                ))
+            
+            # 레이아웃 설정
             fig.update_layout(
-                xaxis_title='학년',
-                yaxis_title='점수',
+                title='정보컴퓨터공학부 학년별 합격/불합격 점수 분포',
                 xaxis=dict(
+                    title='학년',
                     tickmode='array',
                     ticktext=['1학년', '2학년', '3학년', '4학년'],
                     tickvals=[1, 2, 3, 4]
                 ),
-                yaxis=dict(range=[0, 100]),  # y축 범위 설정
+                yaxis=dict(
+                    title='점수',
+                    range=[0, 100]  # y축 범위 설정
+                ),
                 boxmode='group',  # 합격/불합격 박스를 나란히 표시
                 height=600,
-                width=800,
+                width=1000,
                 showlegend=True,
                 legend=dict(
                     yanchor="top",
@@ -401,21 +419,26 @@ class CodingTestMonitor:
             )
             
             # 각 학년별 통계 정보 추가
-            existing_grades = sorted(all_data['학년'].unique())  # 실제 존재하는 학년만 처리
-            for grade in existing_grades:
+            for grade in sorted(all_data['학년'].unique()):
                 grade_data = all_data[all_data['학년'] == grade]
                 total_students = len(grade_data)
-                if total_students > 0:  # 해당 학년의 데이터가 있는 경우만 처리
-                    pass_rate = (grade_data['합격여부'] == '합격').mean() * 100
+                if total_students > 0:
+                    pass_count = len(grade_data[grade_data['합격여부'] == '합격'])
+                    pass_rate = (pass_count / total_students) * 100
                     avg_score = grade_data['총점'].mean()
                     
+                    # 통계 정보 주석 추가
                     fig.add_annotation(
                         x=grade,
                         y=95,  # 상단에 표시
-                        text=f'총 {total_students}명<br>평균: {avg_score:.1f}점<br>합격률: {pass_rate:.1f}%',
+                        text=(f'총 {total_students}명<br>'
+                              f'합격: {pass_count}명<br>'
+                              f'평균: {avg_score:.1f}점<br>'
+                              f'합격률: {pass_rate:.1f}%'),
                         showarrow=False,
                         font=dict(size=10),
-                        align='center'
+                        align='center',
+                        bgcolor='rgba(255, 255, 255, 0.8)'  # 배경 추가
                     )
             
             return fig
