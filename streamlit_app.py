@@ -406,12 +406,7 @@ def main():
                         file_name="filtered_test_results.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
-        
-        except Exception as e:
-            st.error(f"데이터 처리 중 오류 발생: {e}")
-            st.info("데이터 형식을 확인해주세요.")
-    
-    # 고급 분석 섹션
+            # 고급 분석 섹션
             st.header("고급 분석")
             
             # 탭 생성
@@ -457,6 +452,11 @@ def main():
                 if selected_dept:
                     dept_radar_fig = monitor.create_performance_radar(filtered_data, selected_dept)
                     st.plotly_chart(dept_radar_fig, use_container_width=True)
+        except Exception as e:
+            st.error(f"데이터 처리 중 오류 발생: {e}")
+            st.info("데이터 형식을 확인해주세요.")
+    
+    
     else:
         st.warning("업로드된 파일에 데이터가 없습니다.")
 
