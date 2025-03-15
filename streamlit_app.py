@@ -603,53 +603,21 @@ class CodingTestMonitor:
             if all_data.empty:
                 st.warning("정보컴퓨터공학부 데이터가 없습니다.")
                 return go.Figure()
-                
-            # 회차별 합격/불합격 학생수 계산
-            summary_data = all_data.groupby(['회차', '합격여부']).size().reset_index(name='학생수')
             
-            # 전체 응시자수 계산
+            # 회차별 전체 응시자수 계산
             total_data = all_data.groupby('회차').size().reset_index(name='전체')
             
             # 그래프 생성
             fig = go.Figure()
             
-            # 합격자 막대 추가
-            pass_data = summary_data[summary_data['합격여부'] == '합격']
-            if not pass_data.empty:
-                fig.add_trace(go.Bar(
-                    name='합격',
-                    x=pass_data['회차'],
-                    y=pass_data['학생수'],
-                    text=pass_data['학생수'].astype(str) + '명',
-                    textposition='inside',
-                    marker_color='green',
-                    yaxis='y'
-                ))
-            
-            # 불합격자 막대 추가
-            fail_data = summary_data[summary_data['합격여부'] == '불합격']
-            if not fail_data.empty:
-                fig.add_trace(go.Bar(
-                    name='불합격',
-                    x=fail_data['회차'],
-                    y=fail_data['학생수'],
-                    text=fail_data['학생수'].astype(str) + '명',
-                    textposition='inside',
-                    marker_color='red',
-                    yaxis='y'
-                ))
-            
-            # 전체 응시자수 선 그래프 추가
-            fig.add_trace(go.Scatter(
-                name='전체 응시자',
+            # 전체 응시자수 막대 그래프 추가
+            fig.add_trace(go.Bar(
                 x=total_data['회차'],
                 y=total_data['전체'],
                 text=total_data['전체'].astype(str) + '명',
-                textposition='top center',
-                mode='lines+markers+text',
-                marker=dict(size=10, color='blue'),
-                line=dict(color='blue', width=3),
-                yaxis='y2'
+                textposition='auto',
+                marker_color='skyblue',
+                showlegend=False
             ))
             
             # 레이아웃 설정
@@ -662,40 +630,18 @@ class CodingTestMonitor:
                     tickvals=sorted(all_data['회차'].unique())
                 ),
                 yaxis=dict(
-                    title=dict(
-                        text='합격/불합격 학생수',
-                        font=dict(color='black')
-                    ),
+                    title='전체 응시자수',
                     tickfont=dict(color='black')
                 ),
-                yaxis2=dict(
-                    title=dict(
-                        text='전체 응시자수',
-                        font=dict(color='blue')
-                    ),
-                    overlaying='y',
-                    side='right',
-                    tickfont=dict(color='blue')
-                ),
-                showlegend=True,
-                legend=dict(
-                    yanchor="top",
-                    y=0.99,
-                    xanchor="right",
-                    x=0.99
-                ),
-                barmode='stack',
-                height=600,
-                width=1000
+                height=400,
+                width=800
             )
             
             # 각 회차별 합격률 주석 추가
             for round_num in total_data['회차']:
-                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
-                # 해당 회차의 합격자 수 확인
-                pass_count = pass_data[pass_data['회차'] == round_num]['학생수'].values
-                passed = pass_count[0] if len(pass_count) > 0 else 0
-                
+                round_data = all_data[all_data['회차'] == round_num]
+                total = len(round_data)
+                passed = len(round_data[round_data['합격여부'] == '합격'])
                 pass_rate = (passed / total) * 100 if total > 0 else 0
                 
                 fig.add_annotation(
