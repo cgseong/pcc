@@ -185,8 +185,9 @@ class CodingTestMonitor:
     def create_performance_heatmap(self, data):
         """학과별/학년별 성과 히트맵을 생성합니다."""
         try:
+            filtered_data = data[data['학과'] == '정보컴퓨터공학부']
             # 학과-학년별 평균 점수 계산
-            heatmap_data = data.pivot_table(
+            heatmap_data = filtered_data.pivot_table(
                 values='총점',
                 index='학과',
                 columns='학년',
@@ -205,7 +206,7 @@ class CodingTestMonitor:
             ))
             
             fig.update_layout(
-                title='학과-학년별 평균 점수 분포',
+                title='정보컴퓨터공학부 학년별 평균 점수 분포',
                 xaxis_title='학년',
                 yaxis_title='학과'
             )
@@ -255,8 +256,9 @@ class CodingTestMonitor:
     def create_score_box_plot(self, data):
         """학과별 점수 분포 박스플롯을 생성합니다."""
         try:
-            fig = px.box(data, x='학과', y='총점',
-                        title='학과별 점수 분포',
+            filtered_data = data[data['학과'] == '정보컴퓨터공학부']
+            fig = px.box(filtered_data, x='학년', y='총점',
+                        title='정보컴퓨터공학부 학년별 점수 분포',
                         points='all',  # 모든 데이터 포인트 표시
                         color='합격여부')
             
