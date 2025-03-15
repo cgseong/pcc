@@ -183,101 +183,88 @@ class CodingTestMonitor:
             return go.Figure()
 
     def create_performance_heatmap(self, data):
-        """정보컴퓨터공학부 학년별 평균 점수와 학생수를 시각화합니다."""
+        """모든 회차의 정보컴퓨터공학부 응시자 현황을 시각화합니다."""
         try:
+            # 모든 회차 데이터 통합
+            all_data = pd.DataFrame()
+            for round_num, round_data in self.all_rounds_data.items():
+                round_data = round_data.copy()
+                round_data['회차'] = round_num
+                all_data = pd.concat([all_data, round_data])
+            
             # 정보컴퓨터공학부 데이터만 필터링
-            filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
+            filtered_data = all_data[all_data['학과'] == '정보컴퓨터공학부'].copy()
             
-            # 학년을 정수로 변환
-            filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
+            # 회차별 합격/불합격 학생수 계산
+            summary_data = filtered_data.groupby(['회차', '합격여부']).size().reset_index(name='학생수')
             
-            # 학년별, 합격여부별 평균 점수와 학생수 계산
-            avg_scores = filtered_data.groupby(['학년', '합격여부']).agg({
-                '총점': ['mean', 'count']
-            }).reset_index()
-            
-            # 컬럼명 변경
-            avg_scores.columns = ['학년', '합격여부', '평균점수', '학생수']
+            # 전체 응시자수 계산
+            total_data = filtered_data.groupby('회차').size().reset_index(name='전체')
             
             # 그래프 생성
             fig = go.Figure()
             
-            # 합격자 평균 점수 막대 추가
-            pass_data = avg_scores[avg_scores['합격여부'] == '합격']
+            # 합격자 막대 추가
+            pass_data = summary_data[summary_data['합격여부'] == '합격']
             fig.add_trace(go.Bar(
-                name='합격자 평균',
-                x=pass_data['학년'],
-                y=pass_data['평균점수'],
-                text=pass_data['평균점수'].round(1).astype(str) + '점',
-                textposition='auto',
+                name='합격',
+                x=pass_data['회차'],
+                y=pass_data['학생수'],
+                text=pass_data['학생수'].astype(str) + '명',
+                textposition='inside',
                 marker_color='green',
                 yaxis='y'
             ))
             
-            # 불합격자 평균 점수 막대 추가
-            fail_data = avg_scores[avg_scores['합격여부'] == '불합격']
+            # 불합격자 막대 추가
+            fail_data = summary_data[summary_data['합격여부'] == '불합격']
             fig.add_trace(go.Bar(
-                name='불합격자 평균',
-                x=fail_data['학년'],
-                y=fail_data['평균점수'],
-                text=fail_data['평균점수'].round(1).astype(str) + '점',
-                textposition='auto',
+                name='불합격',
+                x=fail_data['회차'],
+                y=fail_data['학생수'],
+                text=fail_data['학생수'].astype(str) + '명',
+                textposition='inside',
                 marker_color='red',
                 yaxis='y'
             ))
             
-            # 합격자 학생수 선 그래프 추가
+            # 전체 응시자수 선 그래프 추가
             fig.add_trace(go.Scatter(
-                name='합격자 수',
-                x=pass_data['학년'],
-                y=pass_data['학생수'],
-                text=pass_data['학생수'].astype(str) + '명',
+                name='전체 응시자',
+                x=total_data['회차'],
+                y=total_data['전체'],
+                text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
                 mode='lines+markers+text',
-                marker=dict(size=8, color='lightgreen'),
-                line=dict(color='lightgreen', width=2),
-                yaxis='y2'
-            ))
-            
-            # 불합격자 학생수 선 그래프 추가
-            fig.add_trace(go.Scatter(
-                name='불합격자 수',
-                x=fail_data['학년'],
-                y=fail_data['학생수'],
-                text=fail_data['학생수'].astype(str) + '명',
-                textposition='bottom center',
-                mode='lines+markers+text',
-                marker=dict(size=8, color='lightcoral'),
-                line=dict(color='lightcoral', width=2),
+                marker=dict(size=10, color='blue'),
+                line=dict(color='blue', width=3),
                 yaxis='y2'
             ))
             
             # 레이아웃 설정
             fig.update_layout(
-                title='정보컴퓨터공학부 학년별 평균 점수와 학생수',
+                title='정보컴퓨터공학부 회차별 응시자 현황',
                 xaxis=dict(
-                    title='학년',
+                    title='회차',
                     tickmode='array',
-                    ticktext=['1', '2', '3', '4'],
-                    tickvals=[1, 2, 3, 4],
-                    dtick=1
+                    ticktext=[f'{i}회차' for i in sorted(filtered_data['회차'].unique())],
+                    tickvals=sorted(filtered_data['회차'].unique())
                 ),
                 yaxis=dict(
                     title=dict(
-                        text='평균 점수',
+                        text='합격/불합격 학생수',
                         font=dict(color='black')
                     ),
-                    range=[0, 100],
                     tickfont=dict(color='black')
                 ),
                 yaxis2=dict(
                     title=dict(
-                        text='학생수',
-                        font=dict(color='gray')
+                        text='전체 응시자수',
+                        font=dict(color='blue')
                     ),
                     overlaying='y',
                     side='right',
-                    tickfont=dict(color='gray')
+                    tickfont=dict(color='blue')
                 ),
                 showlegend=True,
                 legend=dict(
@@ -286,17 +273,32 @@ class CodingTestMonitor:
                     xanchor="right",
                     x=0.99
                 ),
-                barmode='group',
-                bargap=0.15,
-                bargroupgap=0.1
+                barmode='stack',
+                height=600,
+                width=1000
             )
+            
+            # 각 회차별 합격률 주석 추가
+            for round_num in total_data['회차']:
+                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
+                passed = pass_data[pass_data['회차'] == round_num]['학생수'].iloc[0]
+                pass_rate = (passed / total) * 100
+                
+                fig.add_annotation(
+                    x=round_num,
+                    y=total,
+                    text=f'합격률: {pass_rate:.1f}%',
+                    showarrow=True,
+                    arrowhead=4,
+                    yshift=20,
+                    font=dict(size=12)
+                )
             
             return fig
         except Exception as e:
-            st.error(f"점수 분포 시각화 중 오류 발생: {e}")
+            st.error(f"응시자 현황 시각화 중 오류 발생: {e}")
             return go.Figure()
-
-
+        
     def create_total_participants_plot(self):
         """모든 회차의 정보컴퓨터공학부 응시자 현황을 시각화합니다."""        
         try:
