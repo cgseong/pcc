@@ -186,6 +186,7 @@ class CodingTestMonitor:
         """학과별/학년별 성과 히트맵을 생성합니다."""
         try:
             filtered_data = data[data['학과'] == '정보컴퓨터공학부']
+            filtered_data['학년'] = pd.to_numeric(filtered_data['학년'], errors='coerce').astype('Int64')
             # 학과-학년별 평균 점수 계산
             heatmap_data = filtered_data.pivot_table(
                 values='총점',
@@ -207,7 +208,13 @@ class CodingTestMonitor:
             
             fig.update_layout(
                 title='정보컴퓨터공학부 학년별 평균 점수 분포',
-                xaxis_title='학년',
+                xaxis=dict(
+                    title='학년',
+                    tickmode='array',
+                    ticktext=[str(int(x)) for x in heatmap_data.columns],
+                    tickvals=list(range(len(heatmap_data.columns))),
+                    dtick=1
+                ),
                 yaxis_title='학과'
             )
             
