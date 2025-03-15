@@ -185,7 +185,7 @@ class CodingTestMonitor:
     def create_performance_heatmap(self, data):
         """정보컴퓨터공학부 학년별 평균 점수를 시각화합니다."""
         try:
-            **# 정보컴퓨터공학부 데이터만 필터링
+            # 정보컴퓨터공학부 데이터만 필터링
             filtered_data = data[data['학과'] == '정보컴퓨터공학부'].copy()
             
             # 학년을 정수로 변환
@@ -243,8 +243,7 @@ class CodingTestMonitor:
                 barmode='group',
                 bargap=0.15,
                 bargroupgap=0.1
-            )**
-            
+            )            
             return fig
     except Exception as e:
         st.error(f"점수 분포 시각화 중 오류 발생: {e}")
