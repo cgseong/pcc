@@ -671,7 +671,7 @@ class CodingTestMonitor:
                 text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
                 mode='lines+markers+text',
-                marker=dict(size=12, color='blue'),
+                marker=dict(size=12, color='orange'),
                 line=dict(color='orange', width=3),
                 yaxis='y'
             ))
