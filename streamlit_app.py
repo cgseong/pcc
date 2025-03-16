@@ -618,6 +618,22 @@ class CodingTestMonitor:
             # 전체 응시자수 계산
             total_data = all_data.groupby('회차').size().reset_index(name='전체')
             
+            # 합격률 계산
+            pass_rates = []
+            for round_num in total_data['회차']:
+                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
+                pass_count = summary_data[(summary_data['회차'] == round_num) & 
+                                         (summary_data['합격여부'] == '합격')]['학생수']
+                passed = pass_count.iloc[0] if not pass_count.empty else 0
+                pass_rate = (passed / total) * 100 if total > 0 else 0
+                pass_rates.append(pass_rate)
+            
+            # 합격률 데이터프레임 생성
+            pass_rate_df = pd.DataFrame({
+                '회차': total_data['회차'],
+                '합격률': pass_rates
+            })
+            
             # 그래프 생성
             fig = go.Figure()
             
@@ -631,7 +647,7 @@ class CodingTestMonitor:
                     text=pass_data['학생수'].astype(str) + '명',
                     textposition='inside',
                     marker_color='green',
-                    showlegend=False                    
+                    yaxis='y'
                 ))
             
             # 불합격자 막대 추가
@@ -644,7 +660,7 @@ class CodingTestMonitor:
                     text=fail_data['학생수'].astype(str) + '명',
                     textposition='inside',
                     marker_color='red',
-                    showlegend=False                    
+                    yaxis='y'
                 ))
             
             # 전체 응시자수 선 그래프 추가
@@ -655,10 +671,22 @@ class CodingTestMonitor:
                 text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
                 mode='lines+markers+text',
-                marker=dict(size=10, color='blue'),
-                line=dict(color='blue', width=3),                
-                yaxis='y2',
-                showlegend=False
+                marker=dict(size=12, color='blue'),
+                line=dict(color='blue', width=3),
+                yaxis='y'
+            ))
+            
+            # 합격률 선 그래프 추가 (이중 축)
+            fig.add_trace(go.Scatter(
+                name='합격률',
+                x=pass_rate_df['회차'],
+                y=pass_rate_df['합격률'],
+                text=[f'{rate:.1f}%' for rate in pass_rate_df['합격률']],
+                textposition='top right',
+                mode='lines+markers+text',
+                marker=dict(size=12, color='orange'),
+                line=dict(color='orange', width=3, dash='dot'),
+                yaxis='y2'  # 이중 축 사용
             ))
             
             # 레이아웃 설정
@@ -672,50 +700,34 @@ class CodingTestMonitor:
                 ),
                 yaxis=dict(
                     title=dict(
-                        text='전체 응시자수',
+                        text='응시자 수 (명)',
                         font=dict(color='black')
                     ),
+                    side='left',
                     tickfont=dict(color='black')
                 ),
                 yaxis2=dict(
                     title=dict(
-                        text='',
-                        font=dict(color='blue')
+                        text='합격률 (%)',
+                        font=dict(color='orange')
                     ),
-                    overlaying='y',
                     side='right',
-                    tickfont=dict(color='blue')
-                ),            
-                showlegend=True,
-                legend=dict(
-                    yanchor="top",
-                    y=0.99,
-                    xanchor="right",
-                    x=0.99
+                    overlaying='y',
+                    showgrid=False,
+                    range=[0, 100],  # 합격률은 0-100% 범위로 설정
+                    tickfont=dict(color='orange')
                 ),
                 barmode='stack',
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                ),
                 height=600,
                 width=1000
             )
-            
-            # 각 회차별 합격률 주석 추가
-            for round_num in total_data['회차']:
-                total = total_data[total_data['회차'] == round_num]['전체'].iloc[0]
-                # 해당 회차의 합격자 수 확인
-                pass_count = pass_data[pass_data['회차'] == round_num]['학생수'].values
-                passed = pass_count[0] if len(pass_count) > 0 else 0
-                
-                pass_rate = (passed / total) * 100 if total > 0 else 0
-                
-                fig.add_annotation(
-                    x=round_num,
-                    y=total,
-                    text=f'합격률: {pass_rate:.1f}%',
-                    showarrow=True,
-                    arrowhead=4,
-                    yshift=20,
-                    font=dict(size=12)
-                )
             
             return fig
         except Exception as e:
@@ -723,7 +735,6 @@ class CodingTestMonitor:
             import traceback
             st.error(traceback.format_exc())
             return go.Figure()
-
 
 
 def main():
