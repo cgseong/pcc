@@ -434,8 +434,7 @@ class CodingTestMonitor:
         except Exception as e:
             st.error(f"통계 정보 생성 중 오류 발생: {str(e)}")
             import traceback
-            st.error(traceback.format_exc())
-            return go.Figure()
+            st.error(traceback.format_exc())            
 
     def calculate_advanced_statistics(self, data):
         """고급 통계 정보를 계산합니다."""
