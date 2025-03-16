@@ -671,8 +671,8 @@ class CodingTestMonitor:
                 text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
                 mode='lines+markers+text',
-                marker=dict(size=12, color='orange'),
-                line=dict(color='blue', width=3),
+                marker=dict(size=12, color='blue'),
+                line=dict(color='orange', width=3),
                 yaxis='y'
             ))
             
@@ -685,7 +685,7 @@ class CodingTestMonitor:
                 textposition='top right',
                 mode='lines+markers+text',
                 marker=dict(size=12, color='blue'),
-                line=dict(color='orange', width=3, dash='dot'),
+                line=dict(color='blue', width=3, dash='dot'),
                 yaxis='y2'  # 이중 축 사용
             ))
             
@@ -715,7 +715,7 @@ class CodingTestMonitor:
                     overlaying='y',
                     showgrid=False,
                     range=[0, 100],  # 합격률은 0-100% 범위로 설정
-                    tickfont=dict(color='orange')
+                    tickfont=dict(color='blue')
                 ),
                 barmode='stack',
                 legend=dict(
