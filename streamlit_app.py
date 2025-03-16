@@ -358,7 +358,7 @@ class CodingTestMonitor:
             
             if all_data.empty:
                 st.warning("정보컴퓨터공학부 데이터가 없습니다.")
-                return go.Figure()  # 빈 Figure 반환
+                return go.Figure()
             
             # 학년을 정수로 변환
             all_data['학년'] = pd.to_numeric(all_data['학년'], errors='coerce')
@@ -389,42 +389,23 @@ class CodingTestMonitor:
                         '합격자평균': f'{pass_avg:.1f}점'
                     })
             
-            # 통계 데이터를 테이블 형태로 변환
+            # DataFrame 생성 및 표시
             stats_df = pd.DataFrame(stats_data)
             
-            # Plotly 테이블 생성
-            fig = go.Figure(data=[go.Table(
-                header=dict(
-                    values=['학년', '총인원', '합격인원', '불합격인원', '합격률(%)', '합격자평균'],
-                    font=dict(size=14, color='white'),
-                    fill_color='royalblue',
-                    align='center'
-                ),
-                cells=dict(
-                    values=[
-                        stats_df['학년'],
-                        stats_df['총인원'],
-                        stats_df['합격인원'],
-                        stats_df['불합격인원'],
-                        stats_df['합격률(%)'],
-                        stats_df['합격자평균']
-                    ],
-                    font=dict(size=13),
-                    align='center',
-                    height=30
-                )
-            )])
-            
-            # 테이블 레이아웃 설정
-            fig.update_layout(
-                title=dict(
-                    text='정보컴퓨터공학부 학년별 통계',
-                    x=0.5,
-                    font=dict(size=18)
-                ),
-                width=800,
-                height=len(stats_df) * 50 + 100,  # 행 수에 따라 높이 조정
-                margin=dict(t=50, l=0, r=0, b=0)
+            # 학년별 통계 표시
+            st.subheader('정보컴퓨터공학부 학년별 통계')
+            st.dataframe(
+                stats_df,
+                column_config={
+                    '학년': st.column_config.TextColumn('학년'),
+                    '총인원': st.column_config.NumberColumn('총인원', help='전체 응시자 수'),
+                    '합격인원': st.column_config.NumberColumn('합격인원', help='합격자 수'),
+                    '불합격인원': st.column_config.NumberColumn('불합격인원', help='불합격자 수'),
+                    '합격률(%)': st.column_config.TextColumn('합격률(%)', help='합격자 비율'),
+                    '합격자평균': st.column_config.TextColumn('합격자평균', help='합격자들의 평균 점수')
+                },
+                hide_index=True,
+                width=800
             )
             
             # 전체 통계 계산 및 표시
@@ -434,36 +415,27 @@ class CodingTestMonitor:
             total_pass_rate = (total_pass / total_students) * 100
             total_pass_avg = all_data[all_data['합격여부'] == '합격']['총점'].mean()
             
-            # 전체 통계를 테이블에 추가
-            fig.add_trace(go.Table(
-                header=dict(
-                    values=['<b>전체 통계</b>'],
-                    font=dict(size=14, color='white'),
-                    fill_color='darkblue',
-                    align='center'
-                ),
-                cells=dict(
-                    values=[[
-                        f'총 인원: {total_students}명',
-                        f'합격 인원: {total_pass}명',
-                        f'불합격 인원: {total_fail}명',
-                        f'전체 합격률: {total_pass_rate:.1f}%',
-                        f'전체 합격자 평균: {total_pass_avg:.1f}점'
-                    ]],
-                    font=dict(size=13),
-                    align='left',
-                    height=25
-                ),
-                domain=dict(y=[0, 0.2])  # 테이블 위치 조정
-            ))
+            st.subheader('전체 통계')
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("총 인원", f"{total_students}명")
+            with col2:
+                st.metric("합격 인원", f"{total_pass}명")
+            with col3:
+                st.metric("불합격 인원", f"{total_fail}명")
+            with col4:
+                st.metric("전체 합격률", f"{total_pass_rate:.1f}%")
+            with col5:
+                st.metric("전체 합격자 평균", f"{total_pass_avg:.1f}점")
             
-            return fig
+            # Plotly Figure 반환 (빈 Figure)
+            return go.Figure()
             
         except Exception as e:
             st.error(f"통계 정보 생성 중 오류 발생: {str(e)}")
             import traceback
             st.error(traceback.format_exc())
-            return go.Figure()  # 오류 발생 시 빈 Figure 반환
+            return go.Figure()
 
     def calculate_advanced_statistics(self, data):
         """고급 통계 정보를 계산합니다."""
