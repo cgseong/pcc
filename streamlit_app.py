@@ -671,7 +671,7 @@ class CodingTestMonitor:
                 text=total_data['전체'].astype(str) + '명',
                 textposition='top center',
                 mode='lines+markers+text',
-                marker=dict(size=12, color='blue'),
+                marker=dict(size=12, color='orange'),
                 line=dict(color='blue', width=3),
                 yaxis='y'
             ))
@@ -684,7 +684,7 @@ class CodingTestMonitor:
                 text=[f'{rate:.1f}%' for rate in pass_rate_df['합격률']],
                 textposition='top right',
                 mode='lines+markers+text',
-                marker=dict(size=12, color='orange'),
+                marker=dict(size=12, color='blue'),
                 line=dict(color='orange', width=3, dash='dot'),
                 yaxis='y2'  # 이중 축 사용
             ))
@@ -709,7 +709,7 @@ class CodingTestMonitor:
                 yaxis2=dict(
                     title=dict(
                         text='합격률 (%)',
-                        font=dict(color='orange')
+                        font=dict(color='blue')
                     ),
                     side='right',
                     overlaying='y',
