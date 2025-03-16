@@ -426,10 +426,8 @@ class CodingTestMonitor:
             with col4:
                 st.metric("전체 합격률", f"{total_pass_rate:.1f}%")
             with col5:
-                st.metric("전체 합격자 평균", f"{total_pass_avg:.1f}점")
-            
-            # Plotly Figure 반환 (빈 Figure)
-            return go.Figure()
+                st.metric("전체 합격자 평균", f"{total_pass_avg:.1f}점")        
+           
             
         except Exception as e:
             st.error(f"통계 정보 생성 중 오류 발생: {str(e)}")
