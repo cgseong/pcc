@@ -345,7 +345,7 @@ class CodingTestMonitor:
             return go.Figure()
         
     def create_score_box_plot(self):
-        """전체 회차 정보컴퓨터공학부 학년별 합격/불합격 점수 분포 박스플롯을 생성합니다."""
+        """정보컴퓨터공학부의 학년별 합격/불합격 점수 분포를 박스플롯으로 시각화합니다."""
         try:
             # 모든 회차 데이터 통합
             all_data = pd.DataFrame()
@@ -354,67 +354,75 @@ class CodingTestMonitor:
                 # 정보컴퓨터공학부 데이터만 필터링
                 dept_data = round_data[round_data['학과'] == '정보컴퓨터공학부'].copy()
                 if not dept_data.empty:
-                    dept_data['회차'] = round_num
                     all_data = pd.concat([all_data, dept_data])
             
             if all_data.empty:
                 st.warning("정보컴퓨터공학부 데이터가 없습니다.")
                 return go.Figure()
             
-            # 학년을 정수로 변환하고 결측값 처리
+            # 학년을 정수로 변환
             all_data['학년'] = pd.to_numeric(all_data['학년'], errors='coerce')
-            all_data = all_data.dropna(subset=['학년'])  # 학년 결측값이 있는 행 제거
-            all_data['학년'] = all_data['학년'].astype(int)  # 정수로 변환
+            all_data = all_data.dropna(subset=['학년'])
+            all_data['학년'] = all_data['학년'].astype(int)
             
             # 박스플롯 생성
             fig = go.Figure()
             
-            # 합격자 박스플롯 추가
-            pass_data = all_data[all_data['합격여부'] == '합격']
-            if not pass_data.empty:
-                fig.add_trace(go.Box(
-                    x=pass_data['학년'],
-                    y=pass_data['총점'],
-                    name='합격',
-                    boxpoints='all',  # 모든 데이터 포인트 표시
-                    marker_color='green',
-                    showlegend=True
-                ))
+            # 색상 설정
+            colors = {'합격': '#2ecc71', '불합격': '#e74c3c'}
             
-            # 불합격자 박스플롯 추가
-            fail_data = all_data[all_data['합격여부'] == '불합격']
-            if not fail_data.empty:
-                fig.add_trace(go.Box(
-                    x=fail_data['학년'],
-                    y=fail_data['총점'],
-                    name='불합격',
-                    boxpoints='all',  # 모든 데이터 포인트 표시
-                    marker_color='red',
-                    showlegend=True
-                ))
+            # 합격/불합격 데이터 추가
+            for status in ['합격', '불합격']:
+                status_data = all_data[all_data['합격여부'] == status]
+                if not status_data.empty:
+                    fig.add_trace(go.Box(
+                        x=status_data['학년'],
+                        y=status_data['총점'],
+                        name=status,
+                        boxpoints='all',  # 모든 데이터 포인트 표시
+                        jitter=0.3,  # 데이터 포인트 분산
+                        pointpos=-1.8,  # 데이터 포인트 위치
+                        marker=dict(
+                            color=colors[status],
+                            size=8,
+                            opacity=0.6
+                        ),
+                        line=dict(color=colors[status]),
+                        showlegend=True
+                    ))
             
             # 레이아웃 설정
             fig.update_layout(
-                title='정보컴퓨터공학부 학년별 합격/불합격 점수 분포',
+                title=dict(
+                    text='정보컴퓨터공학부 학년별 합격/불합격 점수 분포',
+                    font=dict(size=20)
+                ),
                 xaxis=dict(
                     title='학년',
                     tickmode='array',
                     ticktext=['1학년', '2학년', '3학년', '4학년'],
-                    tickvals=[1, 2, 3, 4]
+                    tickvals=[1, 2, 3, 4],
+                    tickfont=dict(size=14)
                 ),
                 yaxis=dict(
                     title='점수',
-                    range=[0, 100]  # y축 범위 설정
+                    range=[0, 100],
+                    tickfont=dict(size=14),
+                    gridcolor='lightgray'
                 ),
-                boxmode='group',  # 합격/불합격 박스를 나란히 표시
-                height=600,
+                boxmode='group',
+                height=700,
                 width=1000,
+                plot_bgcolor='white',
                 showlegend=True,
                 legend=dict(
                     yanchor="top",
                     y=0.99,
                     xanchor="right",
-                    x=0.99
+                    x=0.99,
+                    bgcolor='rgba(255, 255, 255, 0.8)',
+                    bordercolor='lightgray',
+                    borderwidth=1
                 )
             )
             
@@ -423,23 +431,39 @@ class CodingTestMonitor:
                 grade_data = all_data[all_data['학년'] == grade]
                 total_students = len(grade_data)
                 if total_students > 0:
-                    pass_count = len(grade_data[grade_data['합격여부'] == '합격'])
+                    pass_data = grade_data[grade_data['합격여부'] == '합격']
+                    pass_count = len(pass_data)
                     pass_rate = (pass_count / total_students) * 100
                     avg_score = grade_data['총점'].mean()
+                    pass_avg = pass_data['총점'].mean() if not pass_data.empty else 0
                     
                     # 통계 정보 주석 추가
                     fig.add_annotation(
                         x=grade,
-                        y=95,  # 상단에 표시
-                        text=(f'총 {total_students}명<br>'
+                        y=98,  # 상단에 표시
+                        text=(f'<b>{grade}학년 통계</b><br>'
+                              f'총 인원: {total_students}명<br>'
                               f'합격: {pass_count}명<br>'
+                              f'합격률: {pass_rate:.1f}%<br>'
                               f'평균: {avg_score:.1f}점<br>'
-                              f'합격률: {pass_rate:.1f}%'),
+                              f'합격자 평균: {pass_avg:.1f}점'),
                         showarrow=False,
-                        font=dict(size=10),
+                        font=dict(size=12),
                         align='center',
-                        bgcolor='rgba(255, 255, 255, 0.8)'  # 배경 추가
+                        bgcolor='rgba(255, 255, 255, 0.9)',
+                        bordercolor='lightgray',
+                        borderwidth=1,
+                        borderpad=4
                     )
+            
+            # 합격 기준선 추가
+            fig.add_hline(
+                y=60,  # 합격 기준 점수
+                line_dash="dash",
+                line_color="gray",
+                annotation_text="합격 기준 (60점)",
+                annotation_position="bottom right"
+            )
             
             return fig
         except Exception as e:
