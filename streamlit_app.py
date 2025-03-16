@@ -426,9 +426,8 @@ class CodingTestMonitor:
             with col4:
                 st.metric("전체 합격률", f"{total_pass_rate:.1f}%")
             with col5:
-                st.metric("전체 합격자 평균", f"{total_pass_avg:.1f}점")        
-           
-            
+                st.metric("전체 합격자 평균", f"{total_pass_avg:.1f}점")  
+                       
         except Exception as e:
             st.error(f"통계 정보 생성 중 오류 발생: {str(e)}")
             import traceback
@@ -864,8 +863,7 @@ def main():
                 
                 with col2:
                     # 박스플롯 표시
-                    box_fig = monitor.create_score_box_plot()
-                    st.plotly_chart(box_fig, use_container_width=True)
+                    box_fig = monitor.create_score_box_plot()                    
             
             with tab2:
                 # 고급 통계 정보 표시
