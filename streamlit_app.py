@@ -345,7 +345,7 @@ class CodingTestMonitor:
             return go.Figure()
         
     def create_score_box_plot(self):
-        """전체 회차 정보컴퓨터공학부 학년별 합격/불합격 점수 분포 박스플롯을 생성합니다."""
+        """정보컴퓨터공학부의 학년별 통계 정보를 표시합니다."""
         try:
             # 모든 회차 데이터 통합
             all_data = pd.DataFrame()
@@ -354,99 +354,84 @@ class CodingTestMonitor:
                 # 정보컴퓨터공학부 데이터만 필터링
                 dept_data = round_data[round_data['학과'] == '정보컴퓨터공학부'].copy()
                 if not dept_data.empty:
-                    dept_data['회차'] = round_num
                     all_data = pd.concat([all_data, dept_data])
             
             if all_data.empty:
                 st.warning("정보컴퓨터공학부 데이터가 없습니다.")
-                return go.Figure()
+                return
             
-            # 학년을 정수로 변환하고 결측값 처리
+            # 학년을 정수로 변환
             all_data['학년'] = pd.to_numeric(all_data['학년'], errors='coerce')
-            all_data = all_data.dropna(subset=['학년'])  # 학년 결측값이 있는 행 제거
-            all_data['학년'] = all_data['학년'].astype(int)  # 정수로 변환
+            all_data = all_data.dropna(subset=['학년'])
+            all_data['학년'] = all_data['학년'].astype(int)
             
-            # 박스플롯 생성
-            fig = go.Figure()
-            
-            # 합격자 박스플롯 추가
-            pass_data = all_data[all_data['합격여부'] == '합격']
-            if not pass_data.empty:
-                fig.add_trace(go.Box(
-                    x=pass_data['학년'],
-                    y=pass_data['총점'],
-                    name='합격',
-                    boxpoints='all',  # 모든 데이터 포인트 표시
-                    marker_color='green',
-                    showlegend=True
-                ))
-            
-            # 불합격자 박스플롯 추가
-            fail_data = all_data[all_data['합격여부'] == '불합격']
-            if not fail_data.empty:
-                fig.add_trace(go.Box(
-                    x=fail_data['학년'],
-                    y=fail_data['총점'],
-                    name='불합격',
-                    boxpoints='all',  # 모든 데이터 포인트 표시
-                    marker_color='red',
-                    showlegend=True
-                ))
-            
-            # 레이아웃 설정
-            fig.update_layout(
-                title='정보컴퓨터공학부 학년별 합격/불합격 점수 분포',
-                xaxis=dict(
-                    title='학년',
-                    tickmode='array',
-                    ticktext=['1학년', '2학년', '3학년', '4학년'],
-                    tickvals=[1, 2, 3, 4]
-                ),
-                yaxis=dict(
-                    title='점수',
-                    range=[0, 100]  # y축 범위 설정
-                ),
-                boxmode='group',  # 합격/불합격 박스를 나란히 표시
-                height=600,
-                width=1000,
-                showlegend=True,
-                legend=dict(
-                    yanchor="top",
-                    y=0.99,
-                    xanchor="right",
-                    x=0.99
-                )
-            )
-            
-            # 각 학년별 통계 정보 추가
+            # 학년별 통계 계산
+            stats_data = []
             for grade in sorted(all_data['학년'].unique()):
                 grade_data = all_data[all_data['학년'] == grade]
                 total_students = len(grade_data)
+                
                 if total_students > 0:
-                    pass_count = len(grade_data[grade_data['합격여부'] == '합격'])
-                    pass_rate = (pass_count / total_students) * 100
-                    avg_score = grade_data['총점'].mean()
+                    pass_data = grade_data[grade_data['합격여부'] == '합격']
+                    fail_data = grade_data[grade_data['합격여부'] == '불합격']
                     
-                    # 통계 정보 주석 추가
-                    fig.add_annotation(
-                        x=grade,
-                        y=95,  # 상단에 표시
-                        text=(f'총 {total_students}명<br>'
-                              f'합격: {pass_count}명<br>'
-                              f'평균: {avg_score:.1f}점<br>'
-                              f'합격률: {pass_rate:.1f}%'),
-                        showarrow=False,
-                        font=dict(size=10),
-                        align='center',
-                        bgcolor='rgba(255, 255, 255, 0.8)'  # 배경 추가
-                    )
+                    pass_count = len(pass_data)
+                    fail_count = len(fail_data)
+                    pass_rate = (pass_count / total_students) * 100
+                    pass_avg = pass_data['총점'].mean() if not pass_data.empty else 0
+                    
+                    stats_data.append({
+                        '학년': f'{grade}학년',
+                        '총인원': total_students,
+                        '합격인원': pass_count,
+                        '불합격인원': fail_count,
+                        '합격률(%)': f'{pass_rate:.1f}%',
+                        '합격자평균': f'{pass_avg:.1f}점'
+                    })
             
-            return fig
+            # DataFrame 생성 및 표시
+            stats_df = pd.DataFrame(stats_data)
+            
+            # 스타일이 적용된 테이블로 표시
+            st.subheader('정보컴퓨터공학부 학년별 통계')
+            st.dataframe(
+                stats_df,
+                column_config={
+                    '학년': st.column_config.TextColumn('학년'),
+                    '총인원': st.column_config.NumberColumn('총인원', help='전체 응시자 수'),
+                    '합격인원': st.column_config.NumberColumn('합격인원', help='합격자 수'),
+                    '불합격인원': st.column_config.NumberColumn('불합격인원', help='불합격자 수'),
+                    '합격률(%)': st.column_config.TextColumn('합격률(%)', help='합격자 비율'),
+                    '합격자평균': st.column_config.TextColumn('합격자평균', help='합격자들의 평균 점수')
+                },
+                hide_index=True,
+                width=800
+            )
+            
+            # 전체 통계 계산 및 표시
+            total_students = len(all_data)
+            total_pass = len(all_data[all_data['합격여부'] == '합격'])
+            total_fail = len(all_data[all_data['합격여부'] == '불합격'])
+            total_pass_rate = (total_pass / total_students) * 100
+            total_pass_avg = all_data[all_data['합격여부'] == '합격']['총점'].mean()
+            
+            st.subheader('전체 통계')
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.metric("총 인원", f"{total_students}명")
+            with col2:
+                st.metric("합격 인원", f"{total_pass}명")
+            with col3:
+                st.metric("불합격 인원", f"{total_fail}명")
+            with col4:
+                st.metric("전체 합격률", f"{total_pass_rate:.1f}%")
+            with col5:
+                st.metric("전체 합격자 평균", f"{total_pass_avg:.1f}점")
+            
         except Exception as e:
-            st.error(f"박스플롯 생성 중 오류 발생: {str(e)}")
+            st.error(f"통계 정보 생성 중 오류 발생: {str(e)}")
             import traceback
             st.error(traceback.format_exc())
-            return go.Figure()
 
     def calculate_advanced_statistics(self, data):
         """고급 통계 정보를 계산합니다."""
@@ -878,7 +863,7 @@ def main():
                 
                 with col2:
                     # 박스플롯 표시
-                    box_fig = monitor.create_score_box_plot()  # 인자 제거
+                    box_fig = monitor.create_score_box_plot()
                     st.plotly_chart(box_fig, use_container_width=True)
             
             with tab2:
@@ -891,10 +876,7 @@ def main():
                     st.metric("중앙값", f"{advanced_stats.get('중앙값', 0):.1f}")
                 with col2:
                     st.metric("최고점수", f"{advanced_stats.get('최고점수', 0):.1f}")
-                    st.metric("최저점수", f"{advanced_stats.get('최저점수', 0):.1f}")
-                with col3:
-                    st.metric("상위 10% 평균", f"{advanced_stats.get('상위 10% 평균', 0):.1f}")
-                    st.metric("하위 10% 평균", f"{advanced_stats.get('하위 10% 평균', 0):.1f}")        
+                    st.metric("최저점수", f"{advanced_stats.get('최저점수', 0):.1f}")        
                                 
             st.header("학생별 성과 분석")
             
