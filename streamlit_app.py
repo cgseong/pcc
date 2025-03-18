@@ -486,7 +486,7 @@ class CodingTestMonitor:
             return pd.DataFrame()
 
     def get_multiple_test_students(self):
-        """2회 이상 테스트를 수행한 학생들의 이메일 목록을 반환합니다."""
+        """3회 이상 테스트를 수행한 학생들의 이메일 목록을 반환합니다."""
         try:
             # 각 학생별 응시 횟수 계산
             student_counts = {}
@@ -494,10 +494,10 @@ class CodingTestMonitor:
                 for email in data['이메일'].unique():
                     student_counts[email] = student_counts.get(email, 0) + 1
             
-            # 2회 이상 응시한 학생들만 필터링
+            # 3회 이상 응시한 학생들만 필터링
             multiple_test_students = [
                 email for email, count in student_counts.items() 
-                if count >= 2
+                if count >= 3
             ]
             
             # 학생 정보 가져오기 (이메일, 학과, 학번)
@@ -892,12 +892,12 @@ def main():
             
             # 전체 회차 데이터 로드
             if monitor.load_all_rounds_data():
-                # 2회 이상 응시한 학생 목록 가져오기
+                # 3회 이상 응시한 학생 목록 가져오기
                 multiple_test_students = monitor.get_multiple_test_students()
                 
                 if not multiple_test_students.empty:
                     # 학생 선택을 위한 데이터프레임 표시
-                    st.subheader("2회 이상 응시자 목록")
+                    st.subheader("3회 이상 응시자 목록")
                     st.dataframe(
                         multiple_test_students,
                         column_config={
