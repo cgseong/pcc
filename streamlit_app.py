@@ -890,97 +890,97 @@ def main():
                                 
          # 학생별 성과 분석 섹션 코드
 
-st.header("학생별 성과 분석")
-
-# 전체 회차 데이터 로드
-if monitor.load_all_rounds_data():
-    # 3회 이상 응시한 학생 목록 가져오기
-    multiple_test_students = monitor.get_multiple_test_students()
-    
-    if not multiple_test_students.empty:
-        # 학생 선택을 위한 데이터프레임 표시
-        st.subheader("3회 이상 응시자 목록")
+        st.header("학생별 성과 분석")
         
-        # 클릭 가능한 데이터프레임 생성
-        # CSS를 추가하여 링크 스타일 지정
-        st.markdown("""
-        <style>
-        .student-email {
-            color: #1E90FF;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        # 세션 상태에 선택된 학생 저장
-        if 'selected_student' not in st.session_state:
-            st.session_state.selected_student = None
-        
-        # 클릭 이벤트 처리 함수
-        def handle_click(email):
-            st.session_state.selected_student = email
-        
-        # 데이터프레임을 HTML로 변환하여 클릭 이벤트 추가
-        html_table = '<table style="width:100%"><tr><th>이메일</th><th>학과</th><th>학번</th><th>응시횟수</th></tr>'
-        
-        for _, row in multiple_test_students.iterrows():
-            email = row['이메일']
-            dept = row['학과']
-            student_id = row['학번']
-            test_count = row['응시횟수']
+        # 전체 회차 데이터 로드
+        if monitor.load_all_rounds_data():
+            # 3회 이상 응시한 학생 목록 가져오기
+            multiple_test_students = monitor.get_multiple_test_students()
             
-            html_table += f"""
-            <tr>
-                <td><a class="student-email" href="#" onclick="
-                    document.getElementById('selected-email-input').value='{email}';
-                    document.getElementById('email-submit-button').click();
-                    return false;">{email}</a></td>
-                <td>{dept}</td>
-                <td>{student_id}</td>
-                <td>{test_count}</td>
-            </tr>
-            """
-        
-        html_table += '</table>'
-        st.markdown(html_table, unsafe_allow_html=True)
-        
-        # 숨겨진 폼으로 선택된 이메일 전달
-        with st.form(key='email_form', clear_on_submit=False):
-            selected_email = st.text_input('선택된 이메일', key='selected-email-input', label_visibility='collapsed')
-            submit_button = st.form_submit_button('제출', key='email-submit-button')
-            
-            if submit_button and selected_email:
-                st.session_state.selected_student = selected_email
-        
-        # 선택된 학생이 있으면 성과 표시
-        if st.session_state.selected_student:
-            selected_email = st.session_state.selected_student
-            
-            # 선택된 학생 정보 표시
-            student_info = multiple_test_students[multiple_test_students['이메일'] == selected_email].iloc[0]
-            st.info(f"선택된 학생: {selected_email} ({student_info['학과']} - {student_info['학번']})")
-            
-            score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
-            
-            if score_fig and grade_fig and summary_df is not None:
-                # 성과 요약 표시
-                st.subheader("성과 요약")
-                st.dataframe(summary_df, hide_index=True)
+            if not multiple_test_students.empty:
+                # 학생 선택을 위한 데이터프레임 표시
+                st.subheader("3회 이상 응시자 목록")
                 
-                # 그래프 표시
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.plotly_chart(score_fig, use_container_width=True)
-                with col2:
-                    st.plotly_chart(grade_fig, use_container_width=True)
+                # 클릭 가능한 데이터프레임 생성
+                # CSS를 추가하여 링크 스타일 지정
+                st.markdown("""
+                <style>
+                .student-email {
+                    color: #1E90FF;
+                    text-decoration: underline;
+                    cursor: pointer;
+                }
+                </style>
+                """, unsafe_allow_html=True)
                 
-                # 상세 데이터 표시
-                st.subheader("상세 회차별 데이터")
-                progress_data = monitor.get_student_progress(selected_email)
-                st.dataframe(progress_data)
-    else:
-        st.warning("3회 이상 응시한 학생이 없습니다.")
+                # 세션 상태에 선택된 학생 저장
+                if 'selected_student' not in st.session_state:
+                    st.session_state.selected_student = None
+                
+                # 클릭 이벤트 처리 함수
+                def handle_click(email):
+                    st.session_state.selected_student = email
+                
+                # 데이터프레임을 HTML로 변환하여 클릭 이벤트 추가
+                html_table = '<table style="width:100%"><tr><th>이메일</th><th>학과</th><th>학번</th><th>응시횟수</th></tr>'
+                
+                for _, row in multiple_test_students.iterrows():
+                    email = row['이메일']
+                    dept = row['학과']
+                    student_id = row['학번']
+                    test_count = row['응시횟수']
+                    
+                    html_table += f"""
+                    <tr>
+                        <td><a class="student-email" href="#" onclick="
+                            document.getElementById('selected-email-input').value='{email}';
+                            document.getElementById('email-submit-button').click();
+                            return false;">{email}</a></td>
+                        <td>{dept}</td>
+                        <td>{student_id}</td>
+                        <td>{test_count}</td>
+                    </tr>
+                    """
+                
+                html_table += '</table>'
+                st.markdown(html_table, unsafe_allow_html=True)
+                
+                # 숨겨진 폼으로 선택된 이메일 전달
+                with st.form(key='email_form', clear_on_submit=False):
+                    selected_email = st.text_input('선택된 이메일', key='selected-email-input', label_visibility='collapsed')
+                    submit_button = st.form_submit_button('제출', key='email-submit-button')
+                    
+                    if submit_button and selected_email:
+                        st.session_state.selected_student = selected_email
+                
+                # 선택된 학생이 있으면 성과 표시
+                if st.session_state.selected_student:
+                    selected_email = st.session_state.selected_student
+                    
+                    # 선택된 학생 정보 표시
+                    student_info = multiple_test_students[multiple_test_students['이메일'] == selected_email].iloc[0]
+                    st.info(f"선택된 학생: {selected_email} ({student_info['학과']} - {student_info['학번']})")
+                    
+                    score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
+                    
+                    if score_fig and grade_fig and summary_df is not None:
+                        # 성과 요약 표시
+                        st.subheader("성과 요약")
+                        st.dataframe(summary_df, hide_index=True)
+                        
+                        # 그래프 표시
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.plotly_chart(score_fig, use_container_width=True)
+                        with col2:
+                            st.plotly_chart(grade_fig, use_container_width=True)
+                        
+                        # 상세 데이터 표시
+                        st.subheader("상세 회차별 데이터")
+                        progress_data = monitor.get_student_progress(selected_email)
+                        st.dataframe(progress_data)
+            else:
+                st.warning("3회 이상 응시한 학생이 없습니다.")
                     
         except Exception as e:
             st.error(f"데이터 처리 중 오류 발생: {e}")
