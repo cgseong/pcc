@@ -900,67 +900,28 @@ def main():
                 if not multiple_test_students.empty:
                     # 학생 선택을 위한 데이터프레임 표시
                     st.subheader("3회 이상 응시자 목록")
+                    st.dataframe(
+                        multiple_test_students,
+                        column_config={
+                            "이메일": "이메일",
+                            "학과": "학과",
+                            "학번": "학번",
+                            "응시횟수": st.column_config.NumberColumn(
+                                "응시횟수",
+                                help="전체 응시 횟수"
+                            )
+                        },
+                        hide_index=True
+                    )
                     
-                    # 클릭 가능한 데이터프레임 생성
-                    # CSS를 추가하여 링크 스타일 지정
-                    st.markdown("""
-                    <style>
-                    .student-email {
-                        color: #1E90FF;
-                        text-decoration: underline;
-                        cursor: pointer;
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
+                    # 학생 선택
+                    selected_email = st.selectbox(
+                        "분석할 학생 선택",
+                        options=multiple_test_students['이메일'].tolist(),
+                        format_func=lambda x: f"{x} ({multiple_test_students[multiple_test_students['이메일']==x]['학과'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['학번'].iloc[0]})"
+                    )
                     
-                    # 세션 상태에 선택된 학생 저장
-                    if 'selected_student' not in st.session_state:
-                        st.session_state.selected_student = None
-                    
-                    # 클릭 이벤트 처리 함수
-                    def handle_click(email):
-                        st.session_state.selected_student = email
-                    
-                    # 데이터프레임을 HTML로 변환하여 클릭 이벤트 추가
-                    html_table = '<table style="width:100%"><tr><th>이메일</th><th>학과</th><th>학번</th><th>응시횟수</th></tr>'
-                    
-                    for _, row in multiple_test_students.iterrows():
-                        email = row['이메일']
-                        dept = row['학과']
-                        student_id = row['학번']
-                        test_count = row['응시횟수']
-                        
-                        html_table += f"""
-                        <tr>
-                            <td><a class="student-email" href="#" onclick="
-                                document.getElementById('selected-email-input').value='{email}';
-                                document.getElementById('email-submit-button').click();
-                                return false;">{email}</a></td>
-                            <td>{dept}</td>
-                            <td>{student_id}</td>
-                            <td>{test_count}</td>
-                        </tr>
-                        """
-                    
-                    html_table += '</table>'
-                    st.markdown(html_table, unsafe_allow_html=True)
-                    
-                    # 숨겨진 폼으로 선택된 이메일 전달
-                    with st.form(key='email_form', clear_on_submit=False):
-                        selected_email = st.text_input('선택된 이메일', key='selected-email-input', label_visibility='collapsed')
-                        submit_button = st.form_submit_button('제출', key='email-submit-button')
-                        
-                        if submit_button and selected_email:
-                            st.session_state.selected_student = selected_email
-                    
-                    # 선택된 학생이 있으면 성과 표시
-                    if st.session_state.selected_student:
-                        selected_email = st.session_state.selected_student
-                        
-                        # 선택된 학생 정보 표시
-                        student_info = multiple_test_students[multiple_test_students['이메일'] == selected_email].iloc[0]
-                        st.info(f"선택된 학생: {selected_email} ({student_info['학과']} - {student_info['학번']})")
-                        
+                    if selected_email:
                         score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
                         
                         if score_fig and grade_fig and summary_df is not None:
