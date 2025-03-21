@@ -817,7 +817,7 @@ def main():
                 st.metric("평균 점수", f"{stats['평균 점수']:.1f}점")
             
             # 시각화
-            st.header("데이터 시각화")
+            #st.header("그래프")
             
             # 2x2 그리드로 차트 배치
             col1, col2 = st.columns(2)
