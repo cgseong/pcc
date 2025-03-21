@@ -805,7 +805,7 @@ def main():
             filtered_data = monitor.filter_data(filters)
             
             # 기본 통계 표시
-            st.header("기본 통계")
+            st.header("개요")
             stats = monitor.get_statistics(filtered_data)
             
             col1, col2, col3 = st.columns(3)
