@@ -898,10 +898,8 @@ def main():
                 multiple_test_students = monitor.get_multiple_test_students()
                 
                 if not multiple_test_students.empty:
-                    # 학생 목록 표시
+                    # 학생 선택을 위한 데이터프레임 표시
                     st.subheader("3회 이상 응시자 목록")
-                    
-                    # 기본 데이터프레임 표시
                     st.dataframe(
                         multiple_test_students,
                         column_config={
@@ -916,53 +914,20 @@ def main():
                         hide_index=True
                     )
                     
-                    # 세션 상태 초기화
-                    if 'selected_email' not in st.session_state:
-                        st.session_state.selected_email = None
-                        
-                    # 학생 선택을 위한 선택 박스 추가
-                    st.write("👇 분석할 학생을 선택하세요")
+                    # 학생 선택
                     selected_email = st.selectbox(
-                        "학생 선택",
+                        "분석할 학생 선택",
                         options=multiple_test_students['이메일'].tolist(),
-                        format_func=lambda x: f"{x} ({multiple_test_students[multiple_test_students['이메일']==x]['학과'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['학번'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['응시횟수'].iloc[0]}회 응시)",
-                        key="student_selector"
+                        format_func=lambda x: f"{x} ({multiple_test_students[multiple_test_students['이메일']==x]['학과'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['학번'].iloc[0]})"
                     )
                     
-                    # 선택이 변경되었을 때 세션 상태 업데이트
-                    if selected_email and st.session_state.selected_email != selected_email:
-                        st.session_state.selected_email = selected_email
-                    
-                    # 선택된 이메일이 있으면 성과 요약 표시
                     if selected_email:
-                        # 구분선으로 구분
-                        st.markdown("---")
-                        
-                        # 선택된 학생 정보 표시
-                        student_info = multiple_test_students[multiple_test_students['이메일'] == selected_email].iloc[0]
-                        st.subheader(f"{student_info['학과']} {student_info['학번']} - {selected_email} 학생 분석")
-                        
-                        # 학생 성과 분석
                         score_fig, grade_fig, summary_df = monitor.create_student_progress_plots(selected_email)
                         
                         if score_fig and grade_fig and summary_df is not None:
                             # 성과 요약 표시
                             st.subheader("성과 요약")
-                            
-                            # 요약 정보를 메트릭으로 표시
-                            metrics = summary_df.set_index('지표')['값'].to_dict()
-                            
-                            col1, col2, col3, col4, col5 = st.columns(5)
-                            with col1:
-                                st.metric("응시 횟수", f"{int(metrics['응시 횟수'])}회")
-                            with col2:
-                                st.metric("평균 점수", f"{metrics['평균 점수']:.1f}점")
-                            with col3:
-                                st.metric("최고 점수", f"{metrics['최고 점수']:.1f}점")
-                            with col4:
-                                st.metric("최저 점수", f"{metrics['최저 점수']:.1f}점")
-                            with col5:
-                                st.metric("합격 횟수", f"{int(metrics['합격 횟수'])}회")
+                            st.dataframe(summary_df, hide_index=True)
                             
                             # 그래프 표시
                             col1, col2 = st.columns(2)
@@ -974,23 +939,9 @@ def main():
                             # 상세 데이터 표시
                             st.subheader("상세 회차별 데이터")
                             progress_data = monitor.get_student_progress(selected_email)
-                            
-                            # 데이터프레임 표시를 개선
-                            st.dataframe(
-                                progress_data,
-                                column_config={
-                                    "회차": st.column_config.NumberColumn("회차", format="%d회차"),
-                                    "총점": st.column_config.NumberColumn("총점", format="%.1f점"),
-                                    "합격여부": st.column_config.TextColumn("합격여부"),
-                                    "등급": st.column_config.TextColumn("등급")
-                                },
-                                hide_index=True,
-                                use_container_width=True
-                            )
+                            st.dataframe(progress_data)
                 else:
-                    st.warning("3회 이상 응시한 학생이 없습니다.")
-            else:
-                st.warning("전체 회차 데이터를 로드할 수 없습니다.")
+                    st.warning("2회 이상 응시한 학생이 없습니다.")
                     
         except Exception as e:
             st.error(f"데이터 처리 중 오류 발생: {e}")
