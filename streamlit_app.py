@@ -898,15 +898,11 @@ def main():
                 multiple_test_students = monitor.get_multiple_test_students()
                 
                 if not multiple_test_students.empty:
-                    # 세션 상태 초기화
-                    if 'selected_email' not in st.session_state:
-                        st.session_state.selected_email = None
+                    # 학생 목록 표시
+                    st.subheader("3회 이상 응시자 목록")
                     
-                    # 학생 선택을 위한 데이터프레임 표시
-                    st.subheader("3회 이상 응시자 목록 (행을 클릭하여 상세 분석 보기)")
-                    
-                    # 클릭 가능한 데이터프레임 표시
-                    selection = st.data_editor(
+                    # 기본 데이터프레임 표시
+                    st.dataframe(
                         multiple_test_students,
                         column_config={
                             "이메일": "이메일",
@@ -917,26 +913,28 @@ def main():
                                 help="전체 응시 횟수"
                             )
                         },
-                        hide_index=True,
-                        disabled=True,
-                        selection_mode="single",
+                        hide_index=True
+                    )
+                    
+                    # 세션 상태 초기화
+                    if 'selected_email' not in st.session_state:
+                        st.session_state.selected_email = None
+                        
+                    # 학생 선택을 위한 선택 박스 추가
+                    st.write("👇 분석할 학생을 선택하세요")
+                    selected_email = st.selectbox(
+                        "학생 선택",
+                        options=multiple_test_students['이메일'].tolist(),
+                        format_func=lambda x: f"{x} ({multiple_test_students[multiple_test_students['이메일']==x]['학과'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['학번'].iloc[0]} - {multiple_test_students[multiple_test_students['이메일']==x]['응시횟수'].iloc[0]}회 응시)",
                         key="student_selector"
                     )
                     
-                    # 선택된 행이 있는지 확인
-                    if selection:
-                        selected_index = selection[0]  # 첫 번째 선택된 인덱스
-                        selected_email = multiple_test_students.iloc[selected_index]["이메일"]
-                        
-                        # 이전 선택과 다른 경우에만 상태 업데이트
-                        if st.session_state.selected_email != selected_email:
-                            st.session_state.selected_email = selected_email
-                            st.rerun()
+                    # 선택이 변경되었을 때 세션 상태 업데이트
+                    if selected_email and st.session_state.selected_email != selected_email:
+                        st.session_state.selected_email = selected_email
                     
                     # 선택된 이메일이 있으면 성과 요약 표시
-                    if st.session_state.selected_email:
-                        selected_email = st.session_state.selected_email
-                        
+                    if selected_email:
                         # 구분선으로 구분
                         st.markdown("---")
                         
@@ -989,11 +987,6 @@ def main():
                                 hide_index=True,
                                 use_container_width=True
                             )
-                            
-                            # 선택 초기화 버튼
-                            if st.button("다른 학생 선택하기"):
-                                st.session_state.selected_email = None
-                                st.rerun()
                 else:
                     st.warning("3회 이상 응시한 학생이 없습니다.")
             else:
