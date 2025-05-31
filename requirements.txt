@@ -1,0 +1,18 @@
+# 부산대학교 PCC 응시 결과 분석 시스템 Requirements
+# PRD 4.1: 개발 환경 명세
+
+# Core Framework
+streamlit>=1.28.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+plotly>=5.0.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+
+# Additional Dependencies
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
