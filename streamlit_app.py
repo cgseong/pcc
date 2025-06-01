@@ -61,7 +61,7 @@ def load_data():
 
 # 메인 애플리케이션
 def main():
-    st.markdown('<h1 class="main-header">🏆 부산대학교 PCC 응시결과 분석 시스템</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🏆 부산대학교 PCC 응시결과 분석</h1>', unsafe_allow_html=True)
     
     # 데이터 로딩
     df = load_data()
