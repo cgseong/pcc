@@ -230,8 +230,10 @@ def main():
             # 응시자수 추이
             fig.add_trace(
                 go.Scatter(x=round_stats['회차'], y=round_stats['총_응시자수'],
-                          mode='lines+markers', name='응시자수',
-                          line=dict(color='blue', width=3)),
+                          mode='lines+markers+text', name='응시자수',
+                          line=dict(color='blue', width=3),
+                          text=round_stats['총_응시자수'],
+                          textposition='top center'),
                 row=1, col=1
             )
             
