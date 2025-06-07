@@ -240,28 +240,36 @@ def main():
             # 합격률 추이
             fig.add_trace(
                 go.Scatter(x=round_stats['회차'], y=round_stats['합격률'],
-                          mode='lines+markers', name='합격률(%)',
-                          line=dict(color='green', width=3)),
+                          mode='lines+markers+text', name='합격률(%)',
+                          line=dict(color='green', width=3),
+                          text=[f"{x:.1f}%" for x in round_stats['합격률']],
+                          textposition='top center'),
                 row=1, col=2
             )
             
             # 합격/불합격 현황
             fig.add_trace(
                 go.Bar(x=round_stats['회차'], y=round_stats['합격자수'],
-                      name='합격자수', marker_color='lightgreen'),
+                      name='합격자수', marker_color='lightgreen',
+                      text=round_stats['합격자수'],
+                      textposition='inside'),
                 row=2, col=1
             )
             fig.add_trace(
                 go.Bar(x=round_stats['회차'], y=round_stats['불합격자수'],
-                      name='불합격자수', marker_color='lightcoral'),
+                      name='불합격자수', marker_color='lightcoral',
+                      text=round_stats['불합격자수'],
+                      textposition='inside'),
                 row=2, col=1
             )
             
             # 평균점수 추이
             fig.add_trace(
                 go.Scatter(x=round_stats['회차'], y=round_stats['평균점수'],
-                          mode='lines+markers', name='평균점수',
-                          line=dict(color='orange', width=3)),
+                          mode='lines+markers+text', name='평균점수',
+                          line=dict(color='orange', width=3),
+                          text=[f"{x:.1f}" for x in round_stats['평균점수']],
+                          textposition='top center'),
                 row=2, col=2
             )
             
