@@ -422,7 +422,8 @@ def main():
                     title=f"{student_name}({student_id}) 점수 추이",
                     xaxis_title="회차",
                     yaxis_title="점수",
-                    height=400
+                    height=400,
+                    xaxis=dict(dtick=1)
                 )
                 
                 st.plotly_chart(fig, use_container_width=True)
