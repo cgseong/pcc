@@ -7,7 +7,7 @@ import numpy as np
 
 # 페이지 설정
 st.set_page_config(
-    page_title="부산대학교 PCC 응시결과 분석",
+    page_title="부산대학교 PCC 응시현황",
     page_icon="🏆",
     layout="wide",
     initial_sidebar_state="expanded"
