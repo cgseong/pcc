@@ -7,7 +7,7 @@ import numpy as np
 
 # 페이지 설정
 st.set_page_config(
-    page_title="부산대학교 PCC 응시현황",
+    page_title="닥치고 코딩",
     page_icon="🏆",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -61,7 +61,7 @@ def load_data():
 
 # 메인 애플리케이션
 def main():
-    st.markdown('<h1 class="main-header">🏆 부산대학교 PCC 응시현황(닥코)</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🏆 부산대학교 PCC 응시현황</h1>', unsafe_allow_html=True)
     
     # 데이터 로딩
     df = load_data()
