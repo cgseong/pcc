@@ -741,11 +741,14 @@ def main():
 
         # 탭 7: 3회차-5회차 비교 분석
         with tab7:
-            st.header("🔄 3회차-5회차 비교 분석")
+            st.header("🔄 정보컴퓨터공학부 3회차-5회차 비교 분석")
+            
+            # 정보컴퓨터공학부 데이터만 필터링
+            cse_df = filtered_df[filtered_df['학과'] == '정보컴퓨터공학부']
             
             # 3회차와 5회차 데이터 필터링
-            round3_df = filtered_df[filtered_df['회차'] == 3]
-            round5_df = filtered_df[filtered_df['회차'] == 5]
+            round3_df = cse_df[cse_df['회차'] == 3]
+            round5_df = cse_df[cse_df['회차'] == 5]
             
             if not round3_df.empty and not round5_df.empty:
                 # 1. 전체 성적 비교
@@ -791,7 +794,7 @@ def main():
                 # 학년별 통계 계산
                 grade_stats = pd.DataFrame()
                 
-                for grade in sorted(filtered_df['학년'].unique()):
+                for grade in sorted(cse_df['학년'].unique()):
                     grade3_df = round3_df[round3_df['학년'] == grade]
                     grade5_df = round5_df[round5_df['학년'] == grade]
                     
