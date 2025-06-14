@@ -616,7 +616,12 @@ def main():
                 )
             )
             
-            fig_trend.update_xaxes(title_text="회차")
+            fig_trend.update_xaxes(
+                title_text="회차",
+                tickmode='linear',
+                tick0=1,
+                dtick=1
+            )
             fig_trend.update_yaxes(title_text="평균점수", secondary_y=False)
             fig_trend.update_yaxes(title_text="합격률(%)", secondary_y=True)
             
@@ -654,6 +659,11 @@ def main():
                         title_text="재응시 학생 점수 향상도 분포",
                         xaxis_title="점수 향상도",
                         yaxis_title="학생 수"
+                    )
+                    
+                    fig_improvement.update_xaxes(
+                        tickmode='linear',
+                        dtick=5
                     )
                     
                     st.plotly_chart(fig_improvement, use_container_width=True)
@@ -708,6 +718,12 @@ def main():
                 xaxis_title="회차",
                 yaxis_title="평균점수",
                 showlegend=True
+            )
+            
+            fig_grade_trend.update_xaxes(
+                tickmode='linear',
+                tick0=1,
+                dtick=1
             )
             
             st.plotly_chart(fig_grade_trend, use_container_width=True)
@@ -777,7 +793,12 @@ def main():
                 )
             )
             
-            fig_trend.update_xaxes(title_text="회차")
+            fig_trend.update_xaxes(
+                title_text="회차",
+                tickmode='linear',
+                tick0=1,
+                dtick=1
+            )
             fig_trend.update_yaxes(title_text="평균점수", secondary_y=False)
             fig_trend.update_yaxes(title_text="합격률(%)", secondary_y=True)
             
@@ -815,6 +836,11 @@ def main():
                         title_text="재응시 학생 점수 향상도 분포",
                         xaxis_title="점수 향상도",
                         yaxis_title="학생 수"
+                    )
+                    
+                    fig_improvement.update_xaxes(
+                        tickmode='linear',
+                        dtick=5
                     )
                     
                     st.plotly_chart(fig_improvement, use_container_width=True)
@@ -869,6 +895,12 @@ def main():
                 xaxis_title="회차",
                 yaxis_title="평균점수",
                 showlegend=True
+            )
+            
+            fig_grade_trend.update_xaxes(
+                tickmode='linear',
+                tick0=1,
+                dtick=1
             )
             
             st.plotly_chart(fig_grade_trend, use_container_width=True)
