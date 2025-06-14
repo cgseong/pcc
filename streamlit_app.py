@@ -21,7 +21,7 @@ if 'is_admin' not in st.session_state:
 
 # 로그인 함수
 def login():
-    st.sidebar.markdown("### 🔐 로그인")
+    st.sidebar.markdown("### 🔐 관리자 로그인")
     username = st.sidebar.text_input("아이디")
     password = st.sidebar.text_input("비밀번호", type="password")
     
@@ -91,14 +91,6 @@ def load_data():
 def main():
     st.markdown('<h1 class="main-header">🏆 부산대학교 PCC 응시현황</h1>', unsafe_allow_html=True)
     
-    # 로그인 상태 확인
-    if not st.session_state.authenticated:
-        login()
-        return
-    
-    # 로그아웃 버튼 표시
-    logout()
-    
     # 데이터 로딩
     df = load_data()
     if df is None:
@@ -149,6 +141,10 @@ def main():
     )
     
     st.sidebar.markdown('</div>', unsafe_allow_html=True)
+    
+    # 관리자 로그인 섹션
+    if not st.session_state.is_admin:
+        login()
     
     # 데이터 필터링 적용
     filtered_df = df[
