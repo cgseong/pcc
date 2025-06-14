@@ -162,13 +162,14 @@ def main():
     
     # 탭 생성
     if st.session_state.is_admin:
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
             "📊 전체 정보", 
             "📈 정보컴퓨터공학부 회차별 현황", 
             "🎓 정보컴퓨터공학부 학년별 통계", 
             "👨‍🎓 학생별 성과 분석",
             "📋 상세 데이터",
-            "📈 성장 추이 분석"
+            "📈 성장 추이 분석",
+            "🔄 3회차-5회차 비교 분석"
         ])
     else:
         tab1, tab2, tab3 = st.tabs([
@@ -737,6 +738,231 @@ def main():
             grade_stats.columns = ['평균점수', '표준편차', '최저점수', '최고점수', '합격률']
             grade_stats['합격률'] = (grade_stats['합격률'] * 100).round(1).astype(str) + '%'
             st.dataframe(grade_stats, use_container_width=True)
+
+        # 탭 7: 3회차-5회차 비교 분석
+        with tab7:
+            st.header("🔄 3회차-5회차 비교 분석")
+            
+            # 3회차와 5회차 데이터 필터링
+            round3_df = filtered_df[filtered_df['회차'] == 3]
+            round5_df = filtered_df[filtered_df['회차'] == 5]
+            
+            if not round3_df.empty and not round5_df.empty:
+                # 1. 전체 성적 비교
+                st.subheader("📊 전체 성적 비교")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # 3회차 통계
+                    round3_stats = {
+                        '응시자수': len(round3_df),
+                        '평균점수': round3_df['총점'].mean(),
+                        '합격률': (round3_df['합격여부_binary'].mean() * 100),
+                        '최고점수': round3_df['총점'].max(),
+                        '최저점수': round3_df['총점'].min()
+                    }
+                    
+                    st.metric("3회차 응시자수", f"{round3_stats['응시자수']}명")
+                    st.metric("3회차 평균점수", f"{round3_stats['평균점수']:.1f}점")
+                    st.metric("3회차 합격률", f"{round3_stats['합격률']:.1f}%")
+                    st.metric("3회차 최고점수", f"{round3_stats['최고점수']:.1f}점")
+                    st.metric("3회차 최저점수", f"{round3_stats['최저점수']:.1f}점")
+                
+                with col2:
+                    # 5회차 통계
+                    round5_stats = {
+                        '응시자수': len(round5_df),
+                        '평균점수': round5_df['총점'].mean(),
+                        '합격률': (round5_df['합격여부_binary'].mean() * 100),
+                        '최고점수': round5_df['총점'].max(),
+                        '최저점수': round5_df['총점'].min()
+                    }
+                    
+                    st.metric("5회차 응시자수", f"{round5_stats['응시자수']}명")
+                    st.metric("5회차 평균점수", f"{round5_stats['평균점수']:.1f}점")
+                    st.metric("5회차 합격률", f"{round5_stats['합격률']:.1f}%")
+                    st.metric("5회차 최고점수", f"{round5_stats['최고점수']:.1f}점")
+                    st.metric("5회차 최저점수", f"{round5_stats['최저점수']:.1f}점")
+                
+                # 2. 학년별 성적 비교
+                st.subheader("🎓 학년별 성적 비교")
+                
+                # 학년별 통계 계산
+                grade_stats = pd.DataFrame()
+                
+                for grade in sorted(filtered_df['학년'].unique()):
+                    grade3_df = round3_df[round3_df['학년'] == grade]
+                    grade5_df = round5_df[round5_df['학년'] == grade]
+                    
+                    if not grade3_df.empty and not grade5_df.empty:
+                        grade_stats = pd.concat([grade_stats, pd.DataFrame({
+                            '학년': [grade],
+                            '3회차_응시자수': [len(grade3_df)],
+                            '3회차_평균점수': [grade3_df['총점'].mean()],
+                            '3회차_합격률': [grade3_df['합격여부_binary'].mean() * 100],
+                            '5회차_응시자수': [len(grade5_df)],
+                            '5회차_평균점수': [grade5_df['총점'].mean()],
+                            '5회차_합격률': [grade5_df['합격여부_binary'].mean() * 100],
+                            '평균점수_변화': [grade5_df['총점'].mean() - grade3_df['총점'].mean()],
+                            '합격률_변화': [(grade5_df['합격여부_binary'].mean() - grade3_df['합격여부_binary'].mean()) * 100]
+                        })])
+                
+                # 학년별 평균점수 비교 그래프
+                fig_grade_score = go.Figure()
+                
+                fig_grade_score.add_trace(go.Bar(
+                    x=grade_stats['학년'],
+                    y=grade_stats['3회차_평균점수'],
+                    name='3회차',
+                    text=grade_stats['3회차_평균점수'].round(1),
+                    textposition='auto'
+                ))
+                
+                fig_grade_score.add_trace(go.Bar(
+                    x=grade_stats['학년'],
+                    y=grade_stats['5회차_평균점수'],
+                    name='5회차',
+                    text=grade_stats['5회차_평균점수'].round(1),
+                    textposition='auto'
+                ))
+                
+                fig_grade_score.update_layout(
+                    title_text="학년별 평균점수 비교",
+                    xaxis_title="학년",
+                    yaxis_title="평균점수",
+                    barmode='group',
+                    showlegend=True
+                )
+                
+                st.plotly_chart(fig_grade_score, use_container_width=True)
+                
+                # 학년별 합격률 비교 그래프
+                fig_grade_pass = go.Figure()
+                
+                fig_grade_pass.add_trace(go.Bar(
+                    x=grade_stats['학년'],
+                    y=grade_stats['3회차_합격률'],
+                    name='3회차',
+                    text=grade_stats['3회차_합격률'].round(1).astype(str) + '%',
+                    textposition='auto'
+                ))
+                
+                fig_grade_pass.add_trace(go.Bar(
+                    x=grade_stats['학년'],
+                    y=grade_stats['5회차_합격률'],
+                    name='5회차',
+                    text=grade_stats['5회차_합격률'].round(1).astype(str) + '%',
+                    textposition='auto'
+                ))
+                
+                fig_grade_pass.update_layout(
+                    title_text="학년별 합격률 비교",
+                    xaxis_title="학년",
+                    yaxis_title="합격률(%)",
+                    barmode='group',
+                    showlegend=True
+                )
+                
+                st.plotly_chart(fig_grade_pass, use_container_width=True)
+                
+                # 3. 주요 인사이트
+                st.subheader("💡 주요 인사이트")
+                
+                # 평균점수 변화 분석
+                avg_score_change = round5_stats['평균점수'] - round3_stats['평균점수']
+                st.metric(
+                    "전체 평균점수 변화",
+                    f"{avg_score_change:+.1f}점",
+                    delta=f"{avg_score_change:+.1f}점"
+                )
+                
+                # 합격률 변화 분석
+                pass_rate_change = round5_stats['합격률'] - round3_stats['합격률']
+                st.metric(
+                    "전체 합격률 변화",
+                    f"{pass_rate_change:+.1f}%",
+                    delta=f"{pass_rate_change:+.1f}%"
+                )
+                
+                # 학년별 변화 분석
+                st.subheader("📊 학년별 변화 분석")
+                grade_stats['평균점수_변화'] = grade_stats['평균점수_변화'].round(1)
+                grade_stats['합격률_변화'] = grade_stats['합격률_변화'].round(1)
+                grade_stats['3회차_합격률'] = grade_stats['3회차_합격률'].round(1).astype(str) + '%'
+                grade_stats['5회차_합격률'] = grade_stats['5회차_합격률'].round(1).astype(str) + '%'
+                grade_stats['합격률_변화'] = grade_stats['합격률_변화'].astype(str) + '%'
+                
+                st.dataframe(
+                    grade_stats[[
+                        '학년', '3회차_응시자수', '3회차_평균점수', '3회차_합격률',
+                        '5회차_응시자수', '5회차_평균점수', '5회차_합격률',
+                        '평균점수_변화', '합격률_변화'
+                    ]],
+                    use_container_width=True
+                )
+                
+                # 4. 재응시 학생 분석
+                st.subheader("🔄 재응시 학생 분석")
+                
+                # 3회차와 5회차 모두 응시한 학생 식별
+                retake_students = pd.merge(
+                    round3_df[['이름', '학번', '총점']],
+                    round5_df[['이름', '학번', '총점']],
+                    on=['이름', '학번'],
+                    suffixes=('_3회차', '_5회차')
+                )
+                
+                if not retake_students.empty:
+                    retake_students['점수향상도'] = retake_students['총점_5회차'] - retake_students['총점_3회차']
+                    
+                    # 점수 향상도 분포
+                    fig_improvement = go.Figure()
+                    
+                    fig_improvement.add_trace(go.Histogram(
+                        x=retake_students['점수향상도'],
+                        nbinsx=20,
+                        name='점수 향상도 분포'
+                    ))
+                    
+                    fig_improvement.update_layout(
+                        title_text="재응시 학생 점수 향상도 분포",
+                        xaxis_title="점수 향상도",
+                        yaxis_title="학생 수"
+                    )
+                    
+                    fig_improvement.update_xaxes(
+                        tickmode='linear',
+                        dtick=5
+                    )
+                    
+                    st.plotly_chart(fig_improvement, use_container_width=True)
+                    
+                    # 향상도 통계
+                    improvement_stats = {
+                        '평균 향상도': retake_students['점수향상도'].mean(),
+                        '최대 향상도': retake_students['점수향상도'].max(),
+                        '최소 향상도': retake_students['점수향상도'].min(),
+                        '향상도 표준편차': retake_students['점수향상도'].std(),
+                        '향상한 학생 비율': (retake_students['점수향상도'] > 0).mean() * 100
+                    }
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        for key, value in improvement_stats.items():
+                            st.metric(key, f"{value:.1f}")
+                    
+                    with col2:
+                        st.subheader("📋 재응시 학생 상세 통계")
+                        st.dataframe(
+                            retake_students.sort_values('점수향상도', ascending=False),
+                            use_container_width=True
+                        )
+                else:
+                    st.info("3회차와 5회차 모두 응시한 학생이 없습니다.")
+            else:
+                st.warning("3회차 또는 5회차 데이터가 없습니다.")
 
 if __name__ == "__main__":
     main() 
