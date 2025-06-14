@@ -171,7 +171,7 @@ def main():
             "📈 성장 추이 분석"
         ])
     else:
-        tab1, tab2, tab3, tab6 = st.tabs([
+        tab1, tab2, tab3, tab4 = st.tabs([
             "📊 전체 정보", 
             "📈 정보컴퓨터공학부 회차별 현황", 
             "🎓 정보컴퓨터공학부 학년별 통계",
@@ -564,6 +564,167 @@ def main():
 
         # 탭 6: 성장 추이 분석
         with tab6:
+            st.header("📈 성장 추이 분석")
+            
+            # 1. 전체 성적 추이
+            st.subheader("📊 전체 성적 추이")
+            
+            # 회차별 평균 점수 추이
+            round_trend = filtered_df.groupby('회차').agg({
+                '총점': ['mean', 'std'],
+                '합격여부_binary': 'mean'
+            }).reset_index()
+            round_trend.columns = ['회차', '평균점수', '표준편차', '합격률']
+            round_trend['합격률'] = round_trend['합격률'] * 100
+            
+            fig_trend = make_subplots(specs=[[{"secondary_y": True}]])
+            
+            fig_trend.add_trace(
+                go.Scatter(
+                    x=round_trend['회차'],
+                    y=round_trend['평균점수'],
+                    mode='lines+markers+text',
+                    name='평균점수',
+                    line=dict(color='blue', width=3),
+                    text=round_trend['평균점수'].round(1),
+                    textposition='top center'
+                ),
+                secondary_y=False
+            )
+            
+            fig_trend.add_trace(
+                go.Scatter(
+                    x=round_trend['회차'],
+                    y=round_trend['합격률'],
+                    mode='lines+markers+text',
+                    name='합격률(%)',
+                    line=dict(color='green', width=3),
+                    text=round_trend['합격률'].round(1).astype(str) + '%',
+                    textposition='bottom center'
+                ),
+                secondary_y=True
+            )
+            
+            fig_trend.update_layout(
+                title_text="회차별 평균점수 및 합격률 추이",
+                showlegend=True,
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                )
+            )
+            
+            fig_trend.update_xaxes(title_text="회차")
+            fig_trend.update_yaxes(title_text="평균점수", secondary_y=False)
+            fig_trend.update_yaxes(title_text="합격률(%)", secondary_y=True)
+            
+            st.plotly_chart(fig_trend, use_container_width=True)
+            
+            # 2. 재응시 학생 분석
+            st.subheader("🔄 재응시 학생 분석")
+            
+            # 재응시 학생 식별
+            retake_students = filtered_df.groupby(['이름', '학번']).filter(lambda x: len(x) > 1)
+            
+            if not retake_students.empty:
+                # 재응시 학생들의 점수 변화
+                student_progress = retake_students.groupby(['이름', '학번']).agg({
+                    '총점': ['first', 'last', 'mean'],
+                    '회차': ['first', 'last']
+                }).reset_index()
+                
+                student_progress.columns = ['이름', '학번', '첫시험점수', '최근시험점수', '평균점수', '첫시험회차', '최근시험회차']
+                student_progress['점수향상도'] = student_progress['최근시험점수'] - student_progress['첫시험점수']
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # 점수 향상도 분포
+                    fig_improvement = go.Figure()
+                    
+                    fig_improvement.add_trace(go.Histogram(
+                        x=student_progress['점수향상도'],
+                        nbinsx=20,
+                        name='점수 향상도 분포'
+                    ))
+                    
+                    fig_improvement.update_layout(
+                        title_text="재응시 학생 점수 향상도 분포",
+                        xaxis_title="점수 향상도",
+                        yaxis_title="학생 수"
+                    )
+                    
+                    st.plotly_chart(fig_improvement, use_container_width=True)
+                
+                with col2:
+                    # 향상도 통계
+                    improvement_stats = {
+                        '평균 향상도': student_progress['점수향상도'].mean(),
+                        '최대 향상도': student_progress['점수향상도'].max(),
+                        '최소 향상도': student_progress['점수향상도'].min(),
+                        '향상도 표준편차': student_progress['점수향상도'].std(),
+                        '향상한 학생 비율': (student_progress['점수향상도'] > 0).mean() * 100
+                    }
+                    
+                    for key, value in improvement_stats.items():
+                        st.metric(key, f"{value:.1f}")
+                
+                # 상세 통계
+                st.subheader("📋 재응시 학생 상세 통계")
+                st.dataframe(
+                    student_progress.sort_values('점수향상도', ascending=False),
+                    use_container_width=True
+                )
+            else:
+                st.info("재응시 학생 데이터가 없습니다.")
+            
+            # 3. 학년별 성적 추이
+            st.subheader("🎓 학년별 성적 추이")
+            
+            # 학년-회차별 통계
+            grade_round_stats = filtered_df.groupby(['학년', '회차']).agg({
+                '총점': 'mean',
+                '합격여부_binary': 'mean'
+            }).reset_index()
+            
+            # 학년별 평균점수 추이
+            fig_grade_trend = go.Figure()
+            
+            for grade in sorted(grade_round_stats['학년'].unique()):
+                grade_data = grade_round_stats[grade_round_stats['학년'] == grade]
+                fig_grade_trend.add_trace(go.Scatter(
+                    x=grade_data['회차'],
+                    y=grade_data['총점'],
+                    mode='lines+markers+text',
+                    name=f'{grade}학년',
+                    text=grade_data['총점'].round(1),
+                    textposition='top center'
+                ))
+            
+            fig_grade_trend.update_layout(
+                title_text="학년별 평균점수 추이",
+                xaxis_title="회차",
+                yaxis_title="평균점수",
+                showlegend=True
+            )
+            
+            st.plotly_chart(fig_grade_trend, use_container_width=True)
+            
+            # 학년별 상세 통계
+            st.subheader("📊 학년별 상세 통계")
+            grade_stats = filtered_df.groupby('학년').agg({
+                '총점': ['mean', 'std', 'min', 'max'],
+                '합격여부_binary': 'mean'
+            }).round(2)
+            grade_stats.columns = ['평균점수', '표준편차', '최저점수', '최고점수', '합격률']
+            grade_stats['합격률'] = (grade_stats['합격률'] * 100).round(1).astype(str) + '%'
+            st.dataframe(grade_stats, use_container_width=True)
+    else:
+        # 일반 사용자용 성장 추이 분석 탭
+        with tab4:
             st.header("📈 성장 추이 분석")
             
             # 1. 전체 성적 추이
