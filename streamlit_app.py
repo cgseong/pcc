@@ -354,21 +354,35 @@ def main():
                 
                 fig1.add_trace(
                     go.Bar(x=grade_stats.index, y=grade_stats['응시자수'],
-                          name='응시자수', marker_color='lightblue'),
+                          name='응시자수', marker_color='lightblue',
+                          text=grade_stats['응시자수'],
+                          textposition='inside'),
                     secondary_y=False,
                 )
                 
                 fig1.add_trace(
                     go.Scatter(x=grade_stats.index, y=grade_stats['합격률_pct'],
-                              mode='lines+markers', name='합격률(%)',
-                              line=dict(color='red', width=3)),
+                              mode='lines+markers+text', name='합격률(%)',
+                              line=dict(color='red', width=3),
+                              text=[f"{x:.1f}%" for x in grade_stats['합격률_pct']],
+                              textposition='top center'),
                     secondary_y=True,
                 )
                 
                 fig1.update_xaxes(title_text="학년")
                 fig1.update_yaxes(title_text="응시자수", secondary_y=False)
                 fig1.update_yaxes(title_text="합격률(%)", secondary_y=True)
-                fig1.update_layout(title_text="학년별 응시자수 및 합격률")
+                fig1.update_layout(
+                    title_text="학년별 응시자수 및 합격률",
+                    showlegend=True,
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.02,
+                        xanchor="right",
+                        x=1
+                    )
+                )
                 
                 st.plotly_chart(fig1, use_container_width=True)
             
@@ -377,7 +391,15 @@ def main():
                 fig2 = px.bar(x=grade_stats.index, y=grade_stats['평균점수'],
                              title="학년별 평균점수",
                              labels={'x': '학년', 'y': '평균점수'})
-                fig2.update_traces(marker_color='lightgreen')
+                fig2.update_traces(
+                    marker_color='lightgreen',
+                    text=grade_stats['평균점수'].round(1),
+                    textposition='inside'
+                )
+                fig2.update_layout(
+                    showlegend=False,
+                    yaxis_title="평균점수"
+                )
                 st.plotly_chart(fig2, use_container_width=True)
             
             # 상세 통계 테이블
