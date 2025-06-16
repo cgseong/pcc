@@ -265,6 +265,10 @@ def main():
             round_stats['불합격자수'] = round_stats['총_응시자수'] - round_stats['합격자수']
             round_stats['합격률'] = (round_stats['합격자수'] / round_stats['총_응시자수'] * 100).round(1)
 
+            # Lv.별 인원수 통계 계산
+            level_stats = cse_df.groupby(['회차', '등급(Lv.)']).size().reset_index(name='인원수')
+            level_pivot = level_stats.pivot(index='회차', columns='등급(Lv.)', values='인원수').fillna(0)
+            
             # 그래프 생성
             fig = make_subplots(
                 rows=2, cols=2,
@@ -333,6 +337,10 @@ def main():
             # 상세 통계 테이블
             st.subheader("📋 회차별 상세 통계")
             st.dataframe(round_stats, use_container_width=True)
+
+            # Lv.별 상세 통계
+            st.subheader("📊 회차별 Lv. 상세 통계")
+            st.dataframe(level_pivot, use_container_width=True)
     
     # 탭 3: 정보컴퓨터공학부/전기컴퓨터공학부 학년별 통계
     with tab3:
