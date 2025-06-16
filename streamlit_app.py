@@ -243,7 +243,7 @@ def main():
     
     # 탭 2: 정보컴퓨터공학부/전기컴퓨터공학부 회차별 응시자 현황
     with tab2:
-        st.header("�� 정보컴퓨터공학부/전기컴퓨터공학부 회차별 응시자 현황")
+        st.header("📈 정보컴퓨터공학부/전기컴퓨터공학부 회차별 응시자 현황")
         
         # 정보컴퓨터공학부/전기컴퓨터공학부 데이터만 필터링
         cse_df = filtered_df[
@@ -264,13 +264,18 @@ def main():
             round_stats.columns = ['회차', '총_응시자수', '합격자수', '평균점수']
             round_stats['불합격자수'] = round_stats['총_응시자수'] - round_stats['합격자수']
             round_stats['합격률'] = (round_stats['합격자수'] / round_stats['총_응시자수'] * 100).round(1)
+
+            # Lv.별 인원수 통계 계산
+            level_stats = cse_df.groupby(['회차', '등급(Lv.)']).size().reset_index(name='인원수')
+            level_pivot = level_stats.pivot(index='회차', columns='등급(Lv.)', values='인원수').fillna(0)
             
             # 그래프 생성
             fig = make_subplots(
-                rows=2, cols=2,
-                subplot_titles=('응시자수 추이', '합격률 추이', '합격/불합격 현황', '평균점수 추이'),
+                rows=3, cols=2,
+                subplot_titles=('응시자수 추이', '합격률 추이', '합격/불합격 현황', '평균점수 추이', 'Lv.별 인원수 추이', 'Lv.별 비율 추이'),
                 specs=[[{"type": "scatter"}, {"type": "scatter"}],
-                       [{"type": "bar"}, {"type": "scatter"}]]
+                       [{"type": "bar"}, {"type": "scatter"}],
+                       [{"type": "bar", "colspan": 2}, None]]
             )
             
             # 응시자수 추이
@@ -318,21 +323,35 @@ def main():
                           textposition='top center'),
                 row=2, col=2
             )
-            
+
+            # Lv.별 인원수 추이
+            for level in level_pivot.columns:
+                fig.add_trace(
+                    go.Bar(x=level_pivot.index, y=level_pivot[level],
+                          name=f'Lv.{level}', text=level_pivot[level],
+                          textposition='inside'),
+                    row=3, col=1
+                )
+
             fig.update_layout(
-                height=600, 
+                height=900, 
                 showlegend=True, 
-                title_text="정보컴퓨터공학부/전기컴퓨터공학부 회차별 종합 현황",
-                xaxis=dict(dtick=1),  # x축을 정수 단위로만 표시
-                xaxis2=dict(dtick=1), # 두 번째 서브플롯의 x축
-                xaxis3=dict(dtick=1), # 세 번째 서브플롯의 x축  
-                xaxis4=dict(dtick=1)  # 네 번째 서브플롯의 x축
+                title_text="정보컴퓨터공학부 회차별 종합 현황",
+                xaxis=dict(dtick=1),
+                xaxis2=dict(dtick=1),
+                xaxis3=dict(dtick=1),
+                xaxis4=dict(dtick=1),
+                xaxis5=dict(dtick=1)
             )
             st.plotly_chart(fig, use_container_width=True)
             
             # 상세 통계 테이블
             st.subheader("📋 회차별 상세 통계")
             st.dataframe(round_stats, use_container_width=True)
+
+            # Lv.별 상세 통계
+            st.subheader("📊 회차별 Lv. 상세 통계")
+            st.dataframe(level_pivot, use_container_width=True)
     
     # 탭 3: 정보컴퓨터공학부/전기컴퓨터공학부 학년별 통계
     with tab3:
