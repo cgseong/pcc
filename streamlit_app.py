@@ -265,17 +265,12 @@ def main():
             round_stats['불합격자수'] = round_stats['총_응시자수'] - round_stats['합격자수']
             round_stats['합격률'] = (round_stats['합격자수'] / round_stats['총_응시자수'] * 100).round(1)
 
-            # Lv.별 인원수 통계 계산
-            level_stats = cse_df.groupby(['회차', '등급(Lv.)']).size().reset_index(name='인원수')
-            level_pivot = level_stats.pivot(index='회차', columns='등급(Lv.)', values='인원수').fillna(0)
-            
             # 그래프 생성
             fig = make_subplots(
-                rows=3, cols=2,
-                subplot_titles=('응시자수 추이', '합격률 추이', '합격/불합격 현황', '평균점수 추이', 'Lv.별 인원수 추이', 'Lv.별 비율 추이'),
+                rows=2, cols=2,
+                subplot_titles=('응시자수 추이', '합격률 추이', '합격/불합격 현황', '평균점수 추이'),
                 specs=[[{"type": "scatter"}, {"type": "scatter"}],
-                       [{"type": "bar"}, {"type": "scatter"}],
-                       [{"type": "bar", "colspan": 2}, None]]
+                       [{"type": "bar"}, {"type": "scatter"}]]
             )
             
             # 응시자수 추이
@@ -324,34 +319,20 @@ def main():
                 row=2, col=2
             )
 
-            # Lv.별 인원수 추이
-            for level in level_pivot.columns:
-                fig.add_trace(
-                    go.Bar(x=level_pivot.index, y=level_pivot[level],
-                          name=f'Lv.{level}', text=level_pivot[level],
-                          textposition='inside'),
-                    row=3, col=1
-                )
-
             fig.update_layout(
-                height=900, 
+                height=600, 
                 showlegend=True, 
-                title_text="정보컴퓨터공학부 회차별 종합 현황",
+                title_text="정보컴퓨터공학부/전기컴퓨터공학부 회차별 종합 현황",
                 xaxis=dict(dtick=1),
                 xaxis2=dict(dtick=1),
                 xaxis3=dict(dtick=1),
-                xaxis4=dict(dtick=1),
-                xaxis5=dict(dtick=1)
+                xaxis4=dict(dtick=1)
             )
             st.plotly_chart(fig, use_container_width=True)
             
             # 상세 통계 테이블
             st.subheader("📋 회차별 상세 통계")
             st.dataframe(round_stats, use_container_width=True)
-
-            # Lv.별 상세 통계
-            st.subheader("📊 회차별 Lv. 상세 통계")
-            st.dataframe(level_pivot, use_container_width=True)
     
     # 탭 3: 정보컴퓨터공학부/전기컴퓨터공학부 학년별 통계
     with tab3:
