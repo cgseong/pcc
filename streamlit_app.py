@@ -355,6 +355,94 @@ def main():
         if cse_df.empty:
             st.warning("정보컴퓨터공학부/전기컴퓨터공학부 데이터가 없습니다.")
         else:
+            # 회차별 학년별 통계
+            st.subheader("📊 회차별 학년별 통계")
+            
+            # 회차별 학년별 응시자수 및 합격률
+            grade_round_stats = cse_df.groupby(['회차', '학년']).agg({
+                '이름': 'count',
+                '합격여부_binary': ['sum', 'mean'],
+                '총점': 'mean'
+            }).reset_index()
+            
+            grade_round_stats.columns = ['회차', '학년', '응시자수', '합격자수', '합격률', '평균점수']
+            grade_round_stats['합격률'] = (grade_round_stats['합격률'] * 100).round(1)
+            
+            # 회차별 학년별 응시자수 그래프
+            fig1 = go.Figure()
+            for grade in sorted(grade_round_stats['학년'].unique()):
+                grade_data = grade_round_stats[grade_round_stats['학년'] == grade]
+                fig1.add_trace(go.Bar(
+                    x=grade_data['회차'],
+                    y=grade_data['응시자수'],
+                    name=f'{grade}학년',
+                    text=grade_data['응시자수'],
+                    textposition='auto'
+                ))
+            
+            fig1.update_layout(
+                title_text="회차별 학년별 응시자수",
+                xaxis_title="회차",
+                yaxis_title="응시자수",
+                barmode='group',
+                showlegend=True,
+                xaxis=dict(dtick=1)
+            )
+            st.plotly_chart(fig1, use_container_width=True)
+            
+            # 회차별 학년별 합격률 그래프
+            fig2 = go.Figure()
+            for grade in sorted(grade_round_stats['학년'].unique()):
+                grade_data = grade_round_stats[grade_round_stats['학년'] == grade]
+                fig2.add_trace(go.Scatter(
+                    x=grade_data['회차'],
+                    y=grade_data['합격률'],
+                    mode='lines+markers+text',
+                    name=f'{grade}학년',
+                    text=[f"{x:.1f}%" for x in grade_data['합격률']],
+                    textposition='top center'
+                ))
+            
+            fig2.update_layout(
+                title_text="회차별 학년별 합격률",
+                xaxis_title="회차",
+                yaxis_title="합격률(%)",
+                showlegend=True,
+                xaxis=dict(dtick=1)
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+            
+            # 회차별 학년별 평균점수 그래프
+            fig3 = go.Figure()
+            for grade in sorted(grade_round_stats['학년'].unique()):
+                grade_data = grade_round_stats[grade_round_stats['학년'] == grade]
+                fig3.add_trace(go.Scatter(
+                    x=grade_data['회차'],
+                    y=grade_data['평균점수'],
+                    mode='lines+markers+text',
+                    name=f'{grade}학년',
+                    text=[f"{x:.1f}" for x in grade_data['평균점수']],
+                    textposition='top center'
+                ))
+            
+            fig3.update_layout(
+                title_text="회차별 학년별 평균점수",
+                xaxis_title="회차",
+                yaxis_title="평균점수",
+                showlegend=True,
+                xaxis=dict(dtick=1)
+            )
+            st.plotly_chart(fig3, use_container_width=True)
+            
+            # 회차별 학년별 상세 통계 테이블
+            st.subheader("📋 회차별 학년별 상세 통계")
+            display_stats = grade_round_stats.copy()
+            display_stats['합격률'] = display_stats['합격률'].astype(str) + '%'
+            st.dataframe(display_stats, use_container_width=True)
+            
+            # 학년별 통계
+            st.subheader("🎓 학년별 종합 통계")
+            
             # 학년별 통계
             grade_stats = cse_df.groupby('학년').agg({
                 '이름': 'count',
