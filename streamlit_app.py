@@ -164,18 +164,18 @@ def main():
     if st.session_state.is_admin:
         tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
             "📊 전체 정보", 
-            "📈 정보컴퓨터공학부 회차별 현황", 
-            "🎓 정보컴퓨터공학부 학년별 통계", 
+            "📈 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 회차별 응시자 현황", 
+            "🎓 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 학년별 통계", 
             "👨‍🎓 학생별 성과 분석",
             "📋 상세 데이터",
             "📈 성장 추이 분석",
-            "🔄 3회차-5회차 비교 분석"
+            "🔄 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 3회차-5회차 비교 분석"
         ])
     else:
         tab1, tab2, tab3 = st.tabs([
             "📊 전체 정보", 
-            "📈 정보컴퓨터공학부 회차별 현황", 
-            "🎓 정보컴퓨터공학부 학년별 통계"
+            "📈 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 회차별 응시자 현황", 
+            "🎓 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 학년별 통계"
         ])
     
     # 탭 1: 전체 정보
@@ -241,12 +241,15 @@ def main():
             subject_stats['합격률'] = (subject_stats['합격률'] * 100).round(1).astype(str) + '%'
             st.dataframe(subject_stats, use_container_width=True)
     
-    # 탭 2: 정보컴퓨터공학부 회차별 현황
+    # 탭 2: 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 회차별 응시자 현황
     with tab2:
-        st.header("📈 정보컴퓨터공학부 회차별 응시자 현황")
+        st.header("📈 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 회차별 응시자 현황")
         
         # 정보컴퓨터공학부 데이터만 필터링
-        cse_df = filtered_df[filtered_df['학과'] == '정보컴퓨터공학부']
+        cse_df = filtered_df[
+            (filtered_df['학과'] == '정보컴퓨터공학부') | 
+            (filtered_df['학과'] == '전기컴퓨터공학부 정보컴퓨터공학전공')
+        ]
         
         if cse_df.empty:
             st.warning("정보컴퓨터공학부 데이터가 없습니다.")
@@ -318,7 +321,7 @@ def main():
             fig.update_layout(
                 height=600, 
                 showlegend=True, 
-                title_text="정보컴퓨터공학부 회차별 종합 현황",
+                title_text="정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 회차별 종합 현황",
                 xaxis=dict(dtick=1),  # x축을 정수 단위로만 표시
                 xaxis2=dict(dtick=1), # 두 번째 서브플롯의 x축
                 xaxis3=dict(dtick=1), # 세 번째 서브플롯의 x축  
@@ -330,11 +333,14 @@ def main():
             st.subheader("📋 회차별 상세 통계")
             st.dataframe(round_stats, use_container_width=True)
     
-    # 탭 3: 정보컴퓨터공학부 학년별 통계
+    # 탭 3: 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 학년별 통계
     with tab3:
-        st.header("🎓 정보컴퓨터공학부 학년별 통계")
+        st.header("🎓 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 학년별 통계")
         
-        cse_df = filtered_df[filtered_df['학과'] == '정보컴퓨터공학부']
+        cse_df = filtered_df[
+            (filtered_df['학과'] == '정보컴퓨터공학부') | 
+            (filtered_df['학과'] == '전기컴퓨터공학부 정보컴퓨터공학전공')
+        ]
         
         if cse_df.empty:
             st.warning("정보컴퓨터공학부 데이터가 없습니다.")
@@ -739,12 +745,15 @@ def main():
             grade_stats['합격률'] = (grade_stats['합격률'] * 100).round(1).astype(str) + '%'
             st.dataframe(grade_stats, use_container_width=True)
 
-        # 탭 7: 3회차-5회차 비교 분석
+        # 탭 7: 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 3회차-5회차 비교 분석
         with tab7:
-            st.header("🔄 정보컴퓨터공학부 3회차-5회차 비교 분석")
+            st.header("🔄 정보컴퓨터공학부/전기컴퓨터공학부 정보컴퓨터공학전공 3회차-5회차 비교 분석")
             
             # 정보컴퓨터공학부 데이터만 필터링
-            cse_df = filtered_df[filtered_df['학과'] == '정보컴퓨터공학부']
+            cse_df = filtered_df[
+                (filtered_df['학과'] == '정보컴퓨터공학부') | 
+                (filtered_df['학과'] == '전기컴퓨터공학부 정보컴퓨터공학전공')
+            ]
             
             # 3회차와 5회차 데이터 필터링
             round3_df = cse_df[cse_df['회차'] == 3]
