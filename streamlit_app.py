@@ -394,6 +394,7 @@ def main():
             st.subheader("📋 회차별 학년별 상세 통계")
             display_stats = grade_round_stats.copy()
             display_stats['합격률'] = display_stats['합격률'].astype(str) + '%'
+            display_stats['평균점수'] = display_stats['평균점수'].round(1)
             display_stats = display_stats.sort_values(['회차', '학년'], ascending=[False, False])
             st.dataframe(display_stats, use_container_width=True)
             
