@@ -228,6 +228,7 @@ def main():
             }).round(2)
             dept_stats.columns = ['응시자수', '합격자수', '합격률', '평균점수']
             dept_stats['합격률'] = (dept_stats['합격률'] * 100).round(1).astype(str) + '%'
+            dept_stats = dept_stats.sort_values('응시자수', ascending=False)
             st.dataframe(dept_stats, use_container_width=True)
         
         with col2:
