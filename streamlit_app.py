@@ -515,35 +515,7 @@ def main():
         # 3. 추가 설명
         st.info("💡 **참고사항**: PCCP 레벨은 프로그래밍 역량을 객관적으로 평가하는 지표로, 취업 시 기업에서 요구하는 코딩 역량 수준을 파악하는 데 도움이 됩니다.")
         
-        # 4. 시각적 표현
-        st.subheader("📈 레벨별 난이도 시각화")
-        
-        # 레벨별 난이도를 시각화
-        levels = ['Lv.1', 'Lv.2', 'Lv.3', 'Lv.4', 'Lv.5']
-        difficulty_scores = [1, 2, 3, 4, 5]
-        
-        fig = go.Figure()
-        
-        fig.add_trace(go.Bar(
-            x=levels,
-            y=difficulty_scores,
-            marker_color=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'],
-            text=difficulty_scores,
-            textposition='auto',
-            name='난이도'
-        ))
-        
-        fig.update_layout(
-            title_text="PCCP 레벨별 난이도",
-            xaxis_title="PCCP 레벨",
-            yaxis_title="난이도 (1-5)",
-            showlegend=False,
-            yaxis=dict(range=[0, 6])
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # 5. 학습 가이드
+        # 4. 학습 가이드
         st.subheader("🎯 학습 가이드")
         
         col1, col2 = st.columns(2)
