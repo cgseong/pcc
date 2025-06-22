@@ -275,7 +275,7 @@ def main():
             # 그래프 생성
             fig = make_subplots(
                 rows=2, cols=2,
-                subplot_titles=('응시자수 추이', '합격률 추이', '합격/불합격 현황', '평균점수 추이'),
+                subplot_titles=('회차별 응시자수', '회차별 합격률', '회차별 합격/불합격', '회차별 평균점수'),
                 specs=[[{"type": "scatter"}, {"type": "scatter"}],
                        [{"type": "bar"}, {"type": "scatter"}]]
             )
