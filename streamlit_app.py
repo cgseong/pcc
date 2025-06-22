@@ -415,7 +415,7 @@ def main():
             display_stats['합격률'] = display_stats['합격률'].astype(str) + '%'
             display_stats['평균점수'] = display_stats['평균점수'].round(1)
             display_stats = display_stats.sort_values(['회차', '학년'], ascending=[False, False])
-            st.dataframe(display_stats, use_container_width=True)
+            st.dataframe(display_stats, use_container_width=True, hide_index=True)
             
             # 학년별 통계
             st.subheader("🎓 학년별 종합 통계")
