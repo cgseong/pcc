@@ -339,22 +339,26 @@ def main():
             
             # 상세 통계 테이블
             st.subheader("📋 회차별 상세 통계")
-            st.dataframe(round_stats, use_container_width=True, hide_index=True, column_config={
+            # 회차 기준 내림차순 정렬
+            round_stats_sorted = round_stats.sort_values('회차', ascending=False)
+            st.dataframe(round_stats_sorted, use_container_width=True, hide_index=True, column_config={
                 col: st.column_config.NumberColumn(
                     col,
                     help=None,
                     format="%.1f" if col in ['평균점수', '합격률'] else None
-                ) for col in round_stats.columns
+                ) for col in round_stats_sorted.columns
             })
 
             # Lv.별 상세 통계
             st.subheader("📊 회차별 Lv. 상세 통계")
-            st.dataframe(level_pivot, use_container_width=True, column_config={
+            # 회차 기준 내림차순 정렬
+            level_pivot_sorted = level_pivot.sort_index(ascending=False)
+            st.dataframe(level_pivot_sorted, use_container_width=True, column_config={
                 col: st.column_config.NumberColumn(
                     col,
                     help=None,
                     format="%.0f"
-                ) for col in level_pivot.columns
+                ) for col in level_pivot_sorted.columns
             })
     
     # 탭 3: 정보컴퓨터공학부/전기컴퓨터공학부 학년별 통계
