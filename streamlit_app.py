@@ -327,7 +327,7 @@ def main():
             )
 
             fig.update_layout(
-                height=700, 
+                height=800, 
                 showlegend=True, 
                 title_text="정보컴퓨터공학부/전기컴퓨터공학부 회차별 종합 현황",
                 xaxis=dict(dtick=1),
@@ -339,11 +339,23 @@ def main():
             
             # 상세 통계 테이블
             st.subheader("📋 회차별 상세 통계")
-            st.dataframe(round_stats, use_container_width=True, hide_index=True)
+            st.dataframe(round_stats, use_container_width=True, hide_index=True, column_config={
+                col: st.column_config.NumberColumn(
+                    col,
+                    help=None,
+                    format="%.1f" if col in ['평균점수', '합격률'] else None
+                ) for col in round_stats.columns
+            })
 
             # Lv.별 상세 통계
             st.subheader("📊 회차별 Lv. 상세 통계")
-            st.dataframe(level_pivot, use_container_width=True)
+            st.dataframe(level_pivot, use_container_width=True, column_config={
+                col: st.column_config.NumberColumn(
+                    col,
+                    help=None,
+                    format="%.0f"
+                ) for col in level_pivot.columns
+            })
     
     # 탭 3: 정보컴퓨터공학부/전기컴퓨터공학부 학년별 통계
     with tab3:
